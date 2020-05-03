@@ -1,0 +1,39 @@
+{
+  "name": "nextjs-with-ts-gql-ssr",
+  "version": "1.0.0",
+  "license": "MIT",
+  "scripts": {
+    "dev": "next",
+    "build": "next build",
+    "start": "next start",
+    "schema": "gq $(dotenv -p GRAPHQL_ENDPOINT) --introspect > schema.graphql",
+    "hooks-with-ssr": "node ./build-aux/generate-hooks-with-ssr.js",
+    "codegen": "graphql-codegen && npm run hooks-with-ssr"
+  },
+  "dependencies": {
+    "@apollo/react-hooks": "^3.1.5",
+    "@apollo/react-ssr": "^3.1.5",
+    "apollo-boost": "^0.4.7",
+    "csrf": "^3.1.0",
+    "graphql": "^15.0.0",
+    "next": "^9.3.6",
+    "next-with-apollo": "^5.0.1",
+    "react": "^16.13.0",
+    "react-dom": "^16.13.0",
+    "universal-cookie": "^4.0.3"
+  },
+  "devDependencies": {
+    "@graphql-codegen/cli": "^1.13.4",
+    "@graphql-codegen/typescript": "^1.13.4",
+    "@graphql-codegen/typescript-graphql-request": "^1.13.4",
+    "@graphql-codegen/typescript-operations": "^1.13.4",
+    "@graphql-codegen/typescript-react-apollo": "^1.13.4",
+    "@types/node": "^12.0.12",
+    "@types/react": "^16.8.23",
+    "@types/react-dom": "^16.8.4",
+    "dotenv": "^8.2.0",
+    "dotenv-cli": "^3.1.0",
+    "graphqurl": "^0.3.3",
+    "typescript": "^3.8.3"
+  }
+}
