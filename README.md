@@ -76,3 +76,9 @@ query CounterIndex {
   }
 }
 ```
+
+### About login without reloading the page
+
+At the moment, apollo client does not support hot-change of headers, which is
+required to login without reloading the page. Until apollo client is improved,
+we can force the page to reload to use the new cookie.
