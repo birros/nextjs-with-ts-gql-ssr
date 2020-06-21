@@ -1,5 +1,0 @@
-query Counter {
-  counter {
-    count
-  }
-}

@@ -1,6 +1,3 @@
 {
-  "editor.formatOnSave": true,
-  "files.associations": {
-    "*.graphqls": "graphql"
-  }
+    "editor.formatOnSave": true
 }

@@ -1,7 +1,8 @@
 {
   "recommendations": [
     "esbenp.prettier-vscode",
-    "prisma.vscode-graphql",
+    "apollographql.vscode-apollo",
+    "jpoissonnier.vscode-styled-components",
     "mikestead.dotenv"
   ]
 }
