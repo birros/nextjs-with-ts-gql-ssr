@@ -1,13 +1,5 @@
 # Next.js with TypeScript, GraphQL and SSR
 
-## Commited schema and types are based on an internal graphql server example
-
-```shell
-$ cd _server
-$ npm ci
-$ npm start
-```
-
 ## Workflow
 
 ### Setup
@@ -28,8 +20,6 @@ $ npm start
 ### Development
 
 ```shell
-$ npm run schema  # update ./schema.graphql
-$ npm run codegen # update ./lib/_generated/*.ts
 $ npm run dev
 ```
 
@@ -59,26 +49,3 @@ query ExampleQuery {
   }
 }
 ```
-
-### About GraphQL operations name collisions
-
-The name given to graphql operations is very important. Indeed, the same given
-to two operations defined in different variables can create collisions. It is
-recommended to add as a suffix the name of the component where the operation is
-defined.
-
-Example, a query on `counter` in `/pages/index.tsx` page:
-
-```graphql
-query CounterIndex {
-  counter {
-    count
-  }
-}
-```
-
-### About login without reloading the page
-
-At the moment, apollo client does not support hot-change of headers, which is
-required to login without reloading the page. Until apollo client is improved,
-we can force the page to reload to use the new cookie.
