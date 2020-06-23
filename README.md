@@ -6,8 +6,6 @@
 
 ```shell
 $ npm ci
-$ cp .env.example .env
-$ edit .env
 ```
 
 ### Production
@@ -21,6 +19,20 @@ $ npm start
 
 ```shell
 $ npm run dev
+```
+
+### Change env vars
+
+```shell
+$ cp .env.example .env
+$ edit .env
+```
+
+Or
+
+```shell
+$ export PORT=4000
+$ export API_PORT=4001
 ```
 
 ## Caveats
