@@ -33,3 +33,6 @@ yarn-error.log*
 # Graphql
 *.graphql.d.ts
 *.graphqls.d.ts
+
+# api server
+/dist

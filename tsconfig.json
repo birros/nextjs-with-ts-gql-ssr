@@ -6,7 +6,7 @@
     "lib": ["dom", "es2020"],
     "moduleResolution": "node",
     "allowJs": false,
-    "noEmit": true,
+    "noEmit": false,
     "strict": true,
     "allowSyntheticDefaultImports": true,
     "skipLibCheck": true,

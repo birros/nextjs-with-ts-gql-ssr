@@ -1,29 +1,77 @@
 import { useMemo } from 'react'
+import { IncomingMessage, ServerResponse } from 'http'
 import { ApolloClient } from 'apollo-client'
 import { InMemoryCache, NormalizedCacheObject } from 'apollo-cache-inmemory'
-import { HttpLink } from 'apollo-link-http'
+import { WebSocketLink } from 'apollo-link-ws'
+import { getMainDefinition } from 'apollo-utilities'
+import { split } from 'apollo-link'
 
-const uri = `http://localhost:${process.env.PORT}/api/graphql`
+export type ResolverContext = {
+  req?: IncomingMessage
+  res?: ServerResponse
+}
+
+const API_PORT: number =
+  process.env.API_PORT && parseInt(process.env.API_PORT) !== NaN
+    ? parseInt(process.env.API_PORT)
+    : 3001
+
+const GRAPHQL_ENDPOINT = `http://localhost:${API_PORT}/graphql`
+const GRAPHQL_ENDPOINT_WS =
+  GRAPHQL_ENDPOINT?.replace(/^https/, 'wss').replace(/^http/, 'ws') ?? ''
 
 let apolloClient: ApolloClient<NormalizedCacheObject> | undefined
 
-function createIsomorphLink() {
+const createSchemaLink = (context?: ResolverContext) => {
+  const { SchemaLink } = require('apollo-link-schema')
+  const { schema } = require('./schema')
+  return new SchemaLink({ schema, context })
+}
+
+const createHttpLink = () => {
+  const { HttpLink } = require('apollo-link-http')
   return new HttpLink({
-    uri,
-    credentials: 'same-origin',
+    uri: GRAPHQL_ENDPOINT,
   })
 }
 
-function createApolloClient() {
-  return new ApolloClient({
+const createWsLink = () =>
+  new WebSocketLink({
+    uri: GRAPHQL_ENDPOINT_WS,
+    options: {
+      reconnect: true,
+    },
+  })
+
+const createLink = (context?: ResolverContext) =>
+  process.browser
+    ? split(
+        ({ query }) => {
+          const definition = getMainDefinition(query)
+          return (
+            definition.kind === 'OperationDefinition' &&
+            definition?.operation === 'subscription'
+          )
+        },
+        createWsLink(),
+        createHttpLink()
+      )
+    : createSchemaLink(context)
+
+const createApolloClient = (context?: ResolverContext) =>
+  new ApolloClient({
     ssrMode: typeof window === 'undefined',
-    link: createIsomorphLink(),
+    link: createLink(context),
     cache: new InMemoryCache(),
   })
-}
 
-export function initializeApollo(initialState: any = null) {
-  const _apolloClient = apolloClient ?? createApolloClient()
+export function initializeApollo(
+  initialState: any = null,
+  // Pages with Next.js data fetching methods, like `getStaticProps`, can send
+  // a custom context which will be used by `SchemaLink` to server render pages
+  context?: ResolverContext
+) {
+  const _apolloClient = apolloClient ?? createApolloClient(context)
 
   // If your page has Next.js data fetching methods that use Apollo Client, the initial state
   // get hydrated here

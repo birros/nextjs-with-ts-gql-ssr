@@ -5,3 +5,7 @@ type Counter {
 type Query {
   counter: Counter!
 }
+
+type Subscription {
+  counter: Counter!
+}
