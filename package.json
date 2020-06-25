@@ -11,10 +11,10 @@
     "next:start": "PORT=$(dotenv -p PORT) && PORT=${PORT:-3000} && next start -p $PORT",
     "next:dev": "PORT=$(dotenv -p PORT) && PORT=${PORT:-3000} && next -p $PORT",
     "api:build": "webpack --config webpack.production.js",
-    "api:start": "node dist/index.js",
+    "api:start": "node .dist/index.js",
     "api:build:dev": "webpack --config webpack.development.js",
-    "api:start:dev": "wait-on dist/index.js && npm run api:start",
-    "api:dev": "rm -f dist/index.js && concurrently \"npm:api:build:dev\" \"npm:api:start:dev\""
+    "api:start:dev": "wait-on .dist/index.js && npm run api:start",
+    "api:dev": "rm -f .dist/index.js && concurrently \"npm:api:build:dev\" \"npm:api:start:dev\""
   },
   "dependencies": {
     "@apollo/react-common": "^3.1.4",
