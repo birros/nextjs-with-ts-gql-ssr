@@ -35,7 +35,9 @@ const server = new ApolloServer({
 const corsOptions: CorsOptionsDelegate = (req, callback) => {
   const origin = req.header('Origin')
   if (!origin) {
-    callback(new Error('error.cors'))
+    callback(null, {
+      credentials: true,
+    })
   } else {
     callback(null, {
       origin,
