@@ -35,29 +35,14 @@ $ export PORT=4000
 $ export API_PORT=4001
 ```
 
-## Caveats
+## About login & logout
 
-### About GraphQL subscription & SSR
+As long as Apollo does not improve the on-the-fly change of credentials as well
+as the cleaning of data, especially hooks after a logout, it is necessary to
+reload the entire page in order to clean the data and also reset the connections
+with the new credentials :
 
-For a subscription to work in ssr mode ensure that an equivalent query,
-retrieving exactly the same content as the subscription, is interpretable by the server.
-
-Example, the following subscription...
-
-```graphql
-subscription ExampleSubscription {
-  counter {
-    count
-  }
-}
-```
-
-...requires the following query to be interpretable by the server.
-
-```graphql
-query ExampleQuery {
-  counter {
-    count
-  }
-}
+```typescript
+// after login or logout mutation
+document.location.reload()
 ```

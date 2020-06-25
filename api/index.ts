@@ -7,11 +7,6 @@ import { schema } from '../lib/schema'
 
 config()
 
-const PORT: number =
-  process.env.PORT && parseInt(process.env.PORT) !== NaN
-    ? parseInt(process.env.PORT)
-    : 3000
-
 const API_PORT: number =
   process.env.API_PORT && parseInt(process.env.API_PORT) !== NaN
     ? parseInt(process.env.API_PORT)
@@ -37,10 +32,9 @@ const server = new ApolloServer({
   },
 })
 
-const allowedOrigins = [`http://localhost:${PORT}`]
 const corsOptions: CorsOptionsDelegate = (req, callback) => {
   const origin = req.header('Origin')
-  if (!origin || allowedOrigins.indexOf(origin) === -1) {
+  if (!origin) {
     callback(new Error('error.cors'))
   } else {
     callback(null, {

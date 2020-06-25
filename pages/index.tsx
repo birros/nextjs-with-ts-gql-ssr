@@ -52,21 +52,21 @@ const Index = () => {
   const [login] = useLoginMutation()
   const [logout] = useLogoutMutation()
 
-  const handleLogin = useCallback(async () => {
-    await login()
+  const handleLoginLogout = useCallback(async () => {
+    if (!data) {
+      await login()
+    } else {
+      await logout()
+    }
     document.location.reload()
-  }, [login])
-
-  const handleLogout = useCallback(async () => {
-    await logout()
-    document.location.reload()
-  }, [login])
+  }, [login, logout])
 
   return (
     <div>
       <div>
-        <button onClick={handleLogin}>login</button>
-        <button onClick={handleLogout}>logout</button>
+        <button onClick={handleLoginLogout}>
+          {!data ? 'login' : 'logout'}
+        </button>
       </div>
       <p>{!data ? 'Not logged' : `Count: ${data.counter.count}`}</p>
     </div>
