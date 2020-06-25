@@ -1,6 +1,7 @@
-import { ApolloServer } from 'apollo-server-micro'
+import { ApolloServer } from 'apollo-server-express'
+import express from 'express'
 import http from 'http'
-import cors from 'micro-cors'
+import { CorsOptionsDelegate } from 'cors'
 import { config } from 'dotenv'
 import { schema } from '../lib/schema'
 
@@ -21,7 +22,7 @@ const server = new ApolloServer({
   context: async ({ req, res, connection }) => {
     const isWebsocket = connection !== undefined
 
-    if (isWebsocket) {
+    if (isWebsocket && connection) {
       return {
         req: connection.context.request,
       }
@@ -36,15 +37,23 @@ const server = new ApolloServer({
   },
 })
 
-const corsMiddleware = cors({
-  origin: `http://localhost:${PORT}`,
-})
+const allowedOrigins = [`http://localhost:${PORT}`]
+const corsOptions: CorsOptionsDelegate = (req, callback) => {
+  const origin = req.header('Origin')
+  if (!origin || allowedOrigins.indexOf(origin) === -1) {
+    callback(new Error('error.cors'))
+  } else {
+    callback(null, {
+      origin,
+      credentials: true,
+    })
+  }
+}
 
-const handler = server.createHandler()
-const improvedHandler = corsMiddleware((req: any, res: any) =>
-  req.method === 'OPTIONS' ? res.end() : handler(req, res)
-)
-const httpServer = new http.Server(improvedHandler)
+const app = express()
+const httpServer = http.createServer(app)
+
+server.applyMiddleware({ app, cors: corsOptions })
 server.installSubscriptionHandlers(httpServer)
 
 // Hot Module Replacement
