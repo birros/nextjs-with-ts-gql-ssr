@@ -32,6 +32,7 @@ const createHttpLink = () => {
   const { HttpLink } = require('apollo-link-http')
   return new HttpLink({
     uri: GRAPHQL_ENDPOINT,
+    credentials: 'include',
   })
 }
 

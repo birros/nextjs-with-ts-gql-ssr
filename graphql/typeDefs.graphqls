@@ -6,6 +6,11 @@ type Query {
   counter: Counter!
 }
 
+type Mutation {
+  login: Boolean!
+  logout: Boolean!
+}
+
 type Subscription {
   counter: Counter!
 }
