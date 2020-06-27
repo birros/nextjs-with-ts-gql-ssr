@@ -2,10 +2,7 @@ import { ApolloServer } from 'apollo-server-express'
 import express from 'express'
 import http from 'http'
 import { CorsOptionsDelegate } from 'cors'
-import { config } from 'dotenv'
 import { schema } from '../lib/schema'
-
-config()
 
 const API_PORT: number =
   process.env.API_PORT && parseInt(process.env.API_PORT) !== NaN

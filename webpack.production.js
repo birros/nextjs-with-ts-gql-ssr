@@ -1,13 +1,24 @@
 const { CleanWebpackPlugin } = require('clean-webpack-plugin')
 const merge = require('webpack-merge')
 const nodeExternals = require('webpack-node-externals')
-const path = require('path')
+const webpack = require('webpack')
+require('dotenv').config()
 
 const common = require('./webpack.common.js')
+const commonConfig = { ...common }
+delete commonConfig.env
 
-module.exports = merge(common, {
+const NODE_ENV = 'production'
+
+module.exports = merge(commonConfig, {
   devtool: 'source-map',
   externals: [nodeExternals({})],
-  mode: 'production',
-  plugins: [new CleanWebpackPlugin()],
+  mode: NODE_ENV,
+  plugins: [
+    new CleanWebpackPlugin(),
+    new webpack.EnvironmentPlugin({
+      ...common.env,
+      NODE_ENV: NODE_ENV,
+    }),
+  ],
 })

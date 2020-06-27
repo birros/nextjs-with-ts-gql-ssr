@@ -35,7 +35,9 @@ const setAuthorization = (
   }
 
   const options = {
-    secure: true,
+    secure:
+      process.env.NODE_ENV !== 'development' &&
+      process.env.COOKIE_SECURE !== 'false',
     httpOnly: true,
   }
   const cookie = authorized

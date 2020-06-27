@@ -1,6 +1,16 @@
 const path = require('path')
+require('dotenv').config()
 
 module.exports = {
+  // CAUTION: env section is not officialy a webpack conf, this section is used
+  // to set common env vars.
+  // Default values comes from .env.example
+  // @TODO: parse .env.example directly
+  env: {
+    PORT: process.env.API_PORT || 3000,
+    API_PORT: process.env.API_PORT || 3001,
+    COOKIE_SECURE: process.env.COOKIE_SECURE || true,
+  },
   module: {
     rules: [
       {
