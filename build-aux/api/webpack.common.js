@@ -16,7 +16,7 @@ module.exports = {
       {
         test: /\.ts$/,
         exclude: /node_modules/,
-        use: 'ts-loader?configFile=tsconfig.api.json',
+        use: 'ts-loader?configFile=build-aux/api/tsconfig.api.json',
       },
       {
         test: /\.graphql$/,
@@ -38,13 +38,13 @@ module.exports = {
       },
     ],
   },
-  entry: path.join(__dirname, 'api/index.ts'),
+  entry: path.resolve(__dirname, '..', '..', 'api', 'index.ts'),
   output: {
     filename: 'index.js',
-    path: path.resolve(__dirname, '.dist'),
+    path: path.resolve(__dirname, '..', '..', '.dist'),
   },
   resolve: {
     extensions: ['.ts', '.js'],
   },
-  target: 'node',
+  target: /** @type {'node'} */ ('node'),
 }
