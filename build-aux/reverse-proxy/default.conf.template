@@ -1,0 +1,14 @@
+server {
+    listen ${REVERSE_PROXY_PORT};
+
+    location / {
+        proxy_pass http://host.docker.internal:${PORT}/;
+    }
+
+    location ^~ /graphql {
+        proxy_pass http://host.docker.internal:${API_PORT}/graphql;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "Upgrade";
+        proxy_set_header Host $host;
+    }
+}

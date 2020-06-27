@@ -3,6 +3,7 @@ import express from 'express'
 import http from 'http'
 import { CorsOptionsDelegate } from 'cors'
 import { schema } from '../lib/schema'
+import { GRAPHQL_PATH } from '../lib/config'
 
 const API_PORT: number =
   process.env.API_PORT && parseInt(process.env.API_PORT) !== NaN
@@ -46,7 +47,7 @@ const corsOptions: CorsOptionsDelegate = (req, callback) => {
 const app = express()
 const httpServer = http.createServer(app)
 
-server.applyMiddleware({ app, cors: corsOptions })
+server.applyMiddleware({ app, cors: corsOptions, path: GRAPHQL_PATH })
 server.installSubscriptionHandlers(httpServer)
 
 // Hot Module Replacement

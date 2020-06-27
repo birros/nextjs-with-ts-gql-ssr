@@ -35,6 +35,15 @@ $ export PORT=4000
 $ export API_PORT=4001
 ```
 
+### Reverse proxy
+
+In order to keep the same origin as a vanilla nextjs use a reverse proxy:
+
+```shell
+$ docker-compose -f build-aux/reverse-proxy/docker-compose.yaml up -d # start
+$ docker-compose -f build-aux/reverse-proxy/docker-compose.yaml down  # stop
+```
+
 ## About login & logout
 
 As long as Apollo does not improve the on-the-fly change of credentials as well
