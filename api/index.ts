@@ -1,7 +1,6 @@
-import { ApolloServer } from 'apollo-server-express'
-import express from 'express'
-import http from 'http'
-import { CorsOptionsDelegate } from 'cors'
+import { ApolloServer } from 'apollo-server-micro'
+import http, { IncomingMessage, ServerResponse } from 'http'
+import cors from 'micro-cors'
 import { schema } from '../lib/schema'
 import { GRAPHQL_PATH } from '../lib/config'
 
@@ -30,24 +29,17 @@ const server = new ApolloServer({
   },
 })
 
-const corsOptions: CorsOptionsDelegate = (req, callback) => {
-  const origin = req.header('Origin')
-  if (!origin) {
-    callback(null, {
-      credentials: true,
-    })
-  } else {
-    callback(null, {
-      origin,
-      credentials: true,
-    })
+const corsMiddleware = cors()
+const handler = server.createHandler({ path: GRAPHQL_PATH })
+const improvedHandler = corsMiddleware(
+  (req: IncomingMessage, res: ServerResponse) => {
+    if (req.headers.origin) {
+      res.setHeader('Access-Control-Allow-Origin', req.headers.origin)
+    }
+    req.method === 'OPTIONS' ? res.end() : handler(req, res)
   }
-}
-
-const app = express()
-const httpServer = http.createServer(app)
-
-server.applyMiddleware({ app, cors: corsOptions, path: GRAPHQL_PATH })
+)
+const httpServer = new http.Server(improvedHandler)
 server.installSubscriptionHandlers(httpServer)
 
 // Hot Module Replacement
