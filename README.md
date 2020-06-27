@@ -1,5 +1,9 @@
 # Next.js with TypeScript, GraphQL and SSR
 
+This repo is based on [with-typescript-graphql][1] and adds graphqhl
+subscriptions. If your project doesn't need subscriptions consider using the
+original repo.
+
 ## Workflow
 
 ### Setup
@@ -55,3 +59,7 @@ with the new credentials :
 // after login or logout mutation
 document.location.reload()
 ```
+
+<!-- -->
+
+[1]: https://github.com/vercel/next.js/tree/master/examples/with-typescript-graphql
