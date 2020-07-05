@@ -1,7 +1,7 @@
 import { ApolloServer } from 'apollo-server-micro'
 import { schema } from '../../lib/schema'
 import { Server } from 'http'
-import { NextApiHandler } from 'next'
+import { NextApiHandler, NextApiResponse } from 'next'
 import { GRAPHQL_PATH } from '../../lib/constants'
 
 interface SubscriptionHandlersInstalled {
@@ -35,9 +35,7 @@ const apolloServer = new ApolloServer({
   },
 })
 
-const apolloHandler = apolloServer.createHandler({ path: GRAPHQL_PATH })
-
-const handler: NextApiHandler = (req, res) => {
+const setupSubscriptionHandlers = (res: NextApiResponse) => {
   const server =
     res.socket && (res.socket as any).server instanceof Server
       ? ((res.socket as any).server as Server & SubscriptionHandlersInstalled)
@@ -58,7 +56,12 @@ const handler: NextApiHandler = (req, res) => {
     apolloServer.installSubscriptionHandlers(server)
     server.subscriptionHandlersInstalled = true
   }
+}
 
+const apolloHandler = apolloServer.createHandler({ path: GRAPHQL_PATH })
+
+const handler: NextApiHandler = (req, res) => {
+  setupSubscriptionHandlers(res)
   apolloHandler(req, res)
 }
 
