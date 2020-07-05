@@ -25,27 +25,11 @@ $ npm start
 $ npm run dev
 ```
 
-### Change env vars
+**Caution**: To test the production version without ssl, you need to disable
+secure cookie:
 
 ```shell
-$ cp .env.example .env
-$ edit .env
-```
-
-Or
-
-```shell
-$ export PORT=4000
-$ export API_PORT=4001
-```
-
-### Reverse proxy
-
-In order to keep the same origin as a vanilla nextjs use a reverse proxy:
-
-```shell
-$ docker-compose -f build-aux/reverse-proxy/docker-compose.yaml up -d # start
-$ docker-compose -f build-aux/reverse-proxy/docker-compose.yaml down  # stop
+$ COOKIE_SECURE=false npm start
 ```
 
 ## About login & logout
@@ -62,4 +46,4 @@ document.location.reload()
 
 <!-- -->
 
-[1]: https://github.com/vercel/next.js/tree/master/examples/with-typescript-graphql
+[1]: https://github.com/vercel/next.js/tree/canary/examples/with-typescript-graphql

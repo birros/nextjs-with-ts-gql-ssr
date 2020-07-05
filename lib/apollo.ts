@@ -5,36 +5,21 @@ import { InMemoryCache, NormalizedCacheObject } from 'apollo-cache-inmemory'
 import { WebSocketLink } from 'apollo-link-ws'
 import { getMainDefinition } from 'apollo-utilities'
 import { split } from 'apollo-link'
-import { GRAPHQL_PATH } from './config'
+import { GRAPHQL_PATH } from './constants'
 
 export type ResolverContext = {
   req?: IncomingMessage
   res?: ServerResponse
 }
 
-const PORT: number =
-  process.env.PORT && parseInt(process.env.PORT) !== NaN
-    ? parseInt(process.env.PORT)
-    : 3000
-
-const API_PORT: number =
-  process.env.API_PORT && parseInt(process.env.API_PORT) !== NaN
-    ? parseInt(process.env.API_PORT)
-    : 3001
-
-const GRAPHQL_ENDPOINT = (() => {
-  if (!process.browser) {
-    return GRAPHQL_PATH
-  }
-
-  if (document.location.port === PORT.toString()) {
-    return `${document.location.protocol}//${document.location.hostname}:${API_PORT}${GRAPHQL_PATH}`
-  }
-
-  return `${document.location.origin}${GRAPHQL_PATH}`
-})()
-const GRAPHQL_ENDPOINT_WS =
-  GRAPHQL_ENDPOINT?.replace(/^https/, 'wss').replace(/^http/, 'ws') ?? ''
+const GRAPHQL_ENDPOINT = process.browser
+  ? `${document.location.origin}${GRAPHQL_PATH}`
+  : ''
+const GRAPHQL_ENDPOINT_WS = process.browser
+  ? `${document.location.origin
+      .replace(/^https/, 'wss')
+      .replace(/^http/, 'ws')}${GRAPHQL_PATH}`
+  : ''
 
 let apolloClient: ApolloClient<NormalizedCacheObject> | undefined
 

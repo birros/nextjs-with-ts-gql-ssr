@@ -39,6 +39,7 @@ const setAuthorization = (
       process.env.NODE_ENV !== 'development' &&
       process.env.COOKIE_SECURE !== 'false',
     httpOnly: true,
+    path: '/',
   }
   const cookie = authorized
     ? serialize(BEARER_COOKIE_KEY, BEARER_COOKIE_VALUE, {

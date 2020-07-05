@@ -4,17 +4,9 @@
   "license": "MIT",
   "scripts": {
     "codegen": "graphql-let",
-    "build": "npm run codegen && npm run api:build && npm run next:build",
-    "start": "concurrently \"npm:api:start\" \"npm:next:start\"",
-    "dev": "npm run codegen && concurrently \"npm:api:dev\" \"npm:next:dev\"",
-    "next:build": "next build",
-    "next:start": "PORT=$(dotenv -p PORT) && PORT=${PORT:-3000} && next start -p $PORT",
-    "next:dev": "PORT=$(dotenv -p PORT) && PORT=${PORT:-3000} && next -p $PORT",
-    "api:build": "webpack --config build-aux/api/webpack.production.js",
-    "api:start": "node .dist/index.js",
-    "api:build:dev": "webpack --config build-aux/api/webpack.development.js",
-    "api:start:dev": "wait-on .dist/index.js && npm run api:start",
-    "api:dev": "rm -f .dist/index.js && concurrently \"npm:api:build:dev\" \"npm:api:start:dev\""
+    "dev": "yarn codegen && next",
+    "build": "yarn codegen && next build",
+    "start": "next start"
   },
   "dependencies": {
     "@apollo/react-common": "^3.1.4",
@@ -33,7 +25,6 @@
     "graphql": "^14.6.0",
     "graphql-subscriptions": "^1.1.0",
     "graphql-tag": "^2.10.3",
-    "micro-cors": "^0.1.1",
     "next": "^9.4.4",
     "react": "^16.13.1",
     "react-dom": "^16.13.1"
@@ -46,21 +37,9 @@
     "@graphql-codegen/typescript-react-apollo": "^1.13.3",
     "@graphql-codegen/typescript-resolvers": "^1.15.1",
     "@types/cookie": "^0.4.0",
-    "@types/micro-cors": "^0.1.1",
     "@types/react": "^16.9.34",
     "@types/react-dom": "^16.9.7",
-    "@types/webpack-env": "^1.15.2",
-    "clean-webpack-plugin": "^3.0.0",
-    "concurrently": "^5.2.0",
-    "dotenv": "^8.2.0",
-    "dotenv-cli": "^3.1.0",
     "graphql-let": "^0.x",
-    "ts-loader": "^7.0.5",
-    "typescript": "^3.8.3",
-    "wait-on": "^5.0.1",
-    "webpack": "^4.43.0",
-    "webpack-cli": "^3.3.12",
-    "webpack-merge": "^4.2.2",
-    "webpack-node-externals": "^1.7.2"
+    "typescript": "^3.8.3"
   }
 }
