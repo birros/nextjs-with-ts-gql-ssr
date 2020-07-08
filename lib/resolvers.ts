@@ -5,7 +5,7 @@ import {
 } from '../graphql/typeDefs.graphqls'
 import { ResolverContext } from './apollo'
 import { PubSub } from 'graphql-subscriptions'
-import { parse, serialize } from 'cookie'
+import { parse, serialize, CookieSerializeOptions } from 'cookie'
 import { IncomingMessage, ServerResponse } from 'http'
 
 const BEARER_COOKIE_KEY = 'bearer'
@@ -34,11 +34,12 @@ const setAuthorization = (
     return false
   }
 
-  const options = {
+  const options: CookieSerializeOptions = {
     secure:
       process.env.NODE_ENV !== 'development' &&
       process.env.COOKIE_SECURE !== 'false',
     httpOnly: true,
+    sameSite: 'strict',
     path: '/',
   }
   const cookie = authorized
