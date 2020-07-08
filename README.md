@@ -44,6 +44,32 @@ with the new credentials :
 document.location.reload()
 ```
 
+## Serverless deployment & WebSocket
+
+Since WebSockets are not supported by most serverless providers, this type of
+project must be deployed on a hybrid stack:
+
+1.  A non-serverless infrastructure to manage only the websocket requests on a
+    sub-domain:
+
+    `<commit>.example.org`
+
+2.  A serverless infra on the main domain, as can be done on Vercel:
+
+    `example.org`
+
+Two modifications of the code are necessary to make it compatible with this
+hybrid stack:
+
+1.  Change the link from apollo websocket to subdomain:
+
+    `wss://<commit>.example.org`
+
+2.  Specify in the cookie returned by the frontend server the main domain, so
+    that the cookie is sent to the subdomain:
+
+    `example.org`
+
 <!-- -->
 
 [1]: https://github.com/vercel/next.js/tree/canary/examples/with-typescript-graphql
