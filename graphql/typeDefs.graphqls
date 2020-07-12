@@ -6,8 +6,13 @@ type Query {
   counter: Counter!
 }
 
+input LoginInput {
+  username: String!
+  password: String!
+}
+
 type Mutation {
-  login: Boolean!
+  login(input: LoginInput!): Boolean!
   logout: Boolean!
 }
 

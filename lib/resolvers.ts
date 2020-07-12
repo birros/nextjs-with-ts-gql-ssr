@@ -5,59 +5,14 @@ import {
 } from '../graphql/typeDefs.graphqls'
 import { ResolverContext } from './apollo'
 import { PubSub } from 'graphql-subscriptions'
-import { parse, serialize, CookieSerializeOptions } from 'cookie'
-import { IncomingMessage, ServerResponse } from 'http'
-
-const BEARER_COOKIE_KEY = 'bearer'
-const BEARER_COOKIE_VALUE = 'lorem'
+import { useAuth, authenticate, logout } from './passport'
 
 const pubsub = new PubSub()
 
-const isAuthorized = (req: IncomingMessage | undefined): boolean => {
-  if (!req || !req.headers || !req.headers.cookie) {
-    return false
-  }
-
-  const cookies = parse(req.headers.cookie)
-  if (cookies[BEARER_COOKIE_KEY] !== BEARER_COOKIE_VALUE) {
-    return false
-  }
-
-  return true
-}
-
-const setAuthorization = (
-  res: ServerResponse | undefined,
-  authorized: boolean
-): boolean => {
-  if (!res) {
-    return false
-  }
-
-  const options: CookieSerializeOptions = {
-    secure:
-      process.env.NODE_ENV !== 'development' &&
-      process.env.COOKIE_SECURE !== 'false',
-    httpOnly: true,
-    sameSite: 'strict',
-    path: '/',
-  }
-  const cookie = authorized
-    ? serialize(BEARER_COOKIE_KEY, BEARER_COOKIE_VALUE, {
-        ...options,
-      })
-    : serialize(BEARER_COOKIE_KEY, '', {
-        ...options,
-        expires: new Date(),
-      })
-  res.setHeader('Set-Cookie', cookie)
-
-  return true
-}
-
 const Query: Required<QueryResolvers<ResolverContext>> = {
-  counter(_parent, _args, _context, _info) {
-    if (!isAuthorized(_context.req)) {
+  async counter(_parent, _args, { req, res }, _info) {
+    const user = await useAuth(req, res)
+    if (!user) {
       throw new Error('error.unauthorized')
     }
 
@@ -68,18 +23,19 @@ const Query: Required<QueryResolvers<ResolverContext>> = {
 }
 
 const Mutation: Required<MutationResolvers<ResolverContext>> = {
-  login(_parent, _args, _context, _info) {
-    return setAuthorization(_context.res, true)
+  async login(_parent, { input: { username, password } }, { req, res }, _info) {
+    return await authenticate(req, res, username, password)
   },
-  logout(_parent, _args, _context, _info) {
-    return setAuthorization(_context.res, false)
+  async logout(_parent, _args, { req, res }, _info) {
+    return await logout(req, res)
   },
 }
 
 const Subscription: Required<SubscriptionResolvers<ResolverContext>> = {
   counter: {
-    subscribe: (_parent, _args, _context, _info) => {
-      if (!isAuthorized(_context.req)) {
+    subscribe: async (_parent, _args, { req, res }, _info) => {
+      const user = await useAuth(req, res)
+      if (!user) {
         throw new Error('error.unauthorized')
       }
 
