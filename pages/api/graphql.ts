@@ -15,6 +15,9 @@ interface SubscriptionServerOptions {
 const apolloServer = new ApolloServer({
   playground: {
     subscriptionEndpoint: GRAPHQL_PATH,
+    settings: {
+      'request.credentials': 'include',
+    },
   },
   schema,
   context: async ({ req, res, connection }) => {
