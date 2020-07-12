@@ -85,6 +85,9 @@ export const useAuth = async (
     })(req, res, () => {
       passport.initialize()(req, res, () => {
         passport.session()(req, res, () => {
+          if (cookieOptions.secure) {
+            req.session._ctx.sessionCookies.secure = true
+          }
           then()
         })
       })
