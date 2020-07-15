@@ -5,13 +5,16 @@ import {
 } from '../graphql/typeDefs.graphqls'
 import { ResolverContext } from './apollo'
 import { PubSub } from 'graphql-subscriptions'
-import { useAuth, authenticate, logout } from './passport'
+import { useAuth } from './auth'
+import { authConfig } from './authConfig'
+
+const { authenticate, login, logout } = useAuth(authConfig)
 
 const pubsub = new PubSub()
 
 const Query: Required<QueryResolvers<ResolverContext>> = {
   async counter(_parent, _args, { req, res }, _info) {
-    const user = await useAuth(req, res)
+    const user = await authenticate(req, res)
     if (!user) {
       throw new Error('error.unauthorized')
     }
@@ -24,17 +27,19 @@ const Query: Required<QueryResolvers<ResolverContext>> = {
 
 const Mutation: Required<MutationResolvers<ResolverContext>> = {
   async login(_parent, { input: { username, password } }, { req, res }, _info) {
-    return await authenticate(req, res, username, password)
+    await login(req, res, { username, password })
+    return true
   },
   async logout(_parent, _args, { req, res }, _info) {
-    return await logout(req, res)
+    await logout(req, res)
+    return true
   },
 }
 
 const Subscription: Required<SubscriptionResolvers<ResolverContext>> = {
   counter: {
     subscribe: async (_parent, _args, { req, res }, _info) => {
-      const user = await useAuth(req, res)
+      const user = await authenticate(req, res)
       if (!user) {
         throw new Error('error.unauthorized')
       }
