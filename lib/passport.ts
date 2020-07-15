@@ -61,7 +61,7 @@ const cookieOptions: CookieSerializeOptions = {
     process.env.NODE_ENV !== 'development' &&
     process.env.COOKIE_SECURE !== 'false',
   httpOnly: true,
-  sameSite: 'strict',
+  sameSite: 'lax',
   path: '/',
 }
 
