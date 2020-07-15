@@ -2,9 +2,10 @@ import { AuthConfig } from './auth'
 import { serialize, parse, CookieSerializeOptions } from 'cookie'
 import { sign, verify } from 'jsonwebtoken'
 
+const MAX_AGE = 15 * 60 // 15 min (in seconds)
 const COOKIE_NAME = 'token'
 const COOKIE_OPTIONS: CookieSerializeOptions = {
-  maxAge: 15 * 60 * 1000, // 15 min
+  maxAge: MAX_AGE,
   secure:
     process.env.NODE_ENV !== 'development' &&
     process.env.COOKIE_SECURE !== 'false',
@@ -78,7 +79,9 @@ export const authConfig: AuthConfig<
     return payload
   },
   parse: async (payload) => {
-    const userClientSide = verify(payload, JWT_SECRET) as UserClientSide
+    const userClientSide = verify(payload, JWT_SECRET, {
+      maxAge: `${MAX_AGE}s`,
+    }) as UserClientSide
     return userClientSide
   },
   deserialize: async (userClientSide) => {
