@@ -7,6 +7,7 @@ import { ResolverContext } from './apollo'
 import { PubSub } from 'graphql-subscriptions'
 import { useAuth } from './auth'
 import { authConfig } from './authConfig'
+import { checkCSRF } from './csrf'
 
 const { authenticate, login, logout } = useAuth(authConfig)
 
@@ -27,10 +28,12 @@ const Query: Required<QueryResolvers<ResolverContext>> = {
 
 const Mutation: Required<MutationResolvers<ResolverContext>> = {
   async login(_parent, { input: { username, password } }, { req, res }, _info) {
+    checkCSRF(req)
     await login(req, res, { username, password })
     return true
   },
   async logout(_parent, _args, { req, res }, _info) {
+    checkCSRF(req)
     await logout(req, res)
     return true
   },

@@ -6,7 +6,7 @@ import { WebSocketLink } from 'apollo-link-ws'
 import { getMainDefinition } from 'apollo-utilities'
 import { split } from 'apollo-link'
 import { GRAPHQL_PATH } from './constants'
-import { initCSRF, CSRF_HEADER_NAME } from './authConfig'
+import { setupCSRF, getCSRFToken, CSRF_HEADER_NAME } from './csrf'
 
 export type ResolverContext = {
   req?: IncomingMessage
@@ -24,22 +24,23 @@ const GRAPHQL_ENDPOINT_WS = process.browser
 
 let apolloClient: ApolloClient<NormalizedCacheObject> | undefined
 
-function createIsomorphLink(context: ResolverContext = {}) {
-  const csrfToken = initCSRF(context.req, context.res)
+const createIsomorphLink = (context: ResolverContext = {}) => {
+  if (!process.browser) {
+    setupCSRF(context.req, context.res)
 
-  if (process.browser) {
+    const { SchemaLink } = require('apollo-link-schema')
+    const { schema } = require('./schema')
+    return new SchemaLink({ schema, context })
+  } else {
+    const csrfToken = getCSRFToken(context.req)
+    const headers = csrfToken ? { [CSRF_HEADER_NAME]: csrfToken } : undefined
+
     const { HttpLink } = require('apollo-link-http')
     return new HttpLink({
       uri: GRAPHQL_ENDPOINT,
       credentials: 'same-origin',
-      headers: {
-        [CSRF_HEADER_NAME]: csrfToken,
-      },
+      headers,
     })
-  } else {
-    const { SchemaLink } = require('apollo-link-schema')
-    const { schema } = require('./schema')
-    return new SchemaLink({ schema, context })
   }
 }
 
