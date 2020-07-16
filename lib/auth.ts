@@ -9,6 +9,7 @@ export interface AuthConfig<LoginInput, UserServerSide, UserClientSide> {
   parse: (payload: string) => Promise<UserClientSide>
   deserialize: (userClientSide: UserClientSide) => Promise<UserServerSide>
   clear: (res: ServerResponse) => Promise<void>
+  csrf: (req: IncomingMessage) => Promise<void>
 }
 
 interface Returns<LoginInput, UserServerSide> {
@@ -40,21 +41,30 @@ export const useAuth: UseAuth = ({
   parse,
   deserialize,
   clear,
+  csrf,
 }) => {
   return {
-    login: async (_req, res, loginInput) => {
+    login: async (req, res, loginInput) => {
+      if (!req) {
+        throw new Error('error.no_request_object')
+      }
       if (!res) {
         throw new Error('error.no_response_object')
       }
 
+      csrf(req)
       const userServerSide = await login(loginInput)
       const userClientSide = await serialize(userServerSide)
       const payload = await stringify(userClientSide)
       await write(res, payload)
     },
-    authenticate: async (req, _res) => {
+    authenticate: async (req, _res, checkCSRF = false) => {
       if (!req) {
         throw new Error('error.no_request_object')
+      }
+
+      if (checkCSRF) {
+        csrf(req)
       }
 
       const payload = await read(req)
@@ -66,11 +76,15 @@ export const useAuth: UseAuth = ({
       const userServerSide = deserialize(userClientSide)
       return userServerSide
     },
-    logout: async (_req, res) => {
+    logout: async (req, res) => {
+      if (!req) {
+        throw new Error('error.no_request_object')
+      }
       if (!res) {
         throw new Error('error.no_response_object')
       }
 
+      csrf(req)
       clear(res)
     },
   }

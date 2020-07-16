@@ -1,17 +1,28 @@
 import { AuthConfig } from './auth'
 import { serialize, parse, CookieSerializeOptions } from 'cookie'
 import { sign, verify } from 'jsonwebtoken'
+import { IncomingMessage, ServerResponse } from 'http'
+import crypto from 'crypto'
 
+export const CSRF_HEADER_NAME = 'x-csrf-token'
+const CSRF_COOKIE_NAME = 'csrf_token'
 const MAX_AGE = 15 * 60 // 15 min (in seconds)
 const COOKIE_NAME = 'token'
 const COOKIE_OPTIONS: CookieSerializeOptions = {
-  maxAge: MAX_AGE,
   secure:
     process.env.NODE_ENV !== 'development' &&
     process.env.COOKIE_SECURE !== 'false',
-  httpOnly: true,
   sameSite: 'lax',
   path: '/',
+}
+const COOKIE_OPTIONS_JWT: CookieSerializeOptions = {
+  ...COOKIE_OPTIONS,
+  maxAge: MAX_AGE,
+  httpOnly: true,
+}
+const COOKIE_OPTIONS_CSRF: CookieSerializeOptions = {
+  ...COOKIE_OPTIONS,
+  httpOnly: false,
 }
 const JWT_SECRET = 'loremipsum'
 const USER_EXAMPLE: UserServerSide = {
@@ -61,7 +72,7 @@ export const authConfig: AuthConfig<
     return payload
   },
   write: async (res, payload) => {
-    const cookie = serialize(COOKIE_NAME, payload, COOKIE_OPTIONS)
+    const cookie = serialize(COOKIE_NAME, payload, COOKIE_OPTIONS_JWT)
     res.setHeader('Set-Cookie', cookie)
   },
   read: async (req) => {
@@ -100,4 +111,45 @@ export const authConfig: AuthConfig<
 
     res.setHeader('Set-Cookie', cookie)
   },
+  csrf: async (req) => {
+    const xCsrfToken =
+      CSRF_HEADER_NAME in req.headers &&
+      !Array.isArray(req.headers[CSRF_HEADER_NAME])
+        ? req.headers[CSRF_HEADER_NAME]
+        : undefined
+
+    const csrfToken =
+      req.headers.cookie && CSRF_COOKIE_NAME in parse(req.headers.cookie)
+        ? parse(req.headers.cookie).csrf_token
+        : undefined
+
+    if (xCsrfToken !== csrfToken) {
+      throw new Error('error.csrf')
+    }
+  },
+}
+
+export const initCSRF = (
+  req: IncomingMessage | undefined,
+  res: ServerResponse | undefined
+) => {
+  const cookie = process.browser ? document.cookie : req?.headers.cookie
+  if (cookie) {
+    const cookies = parse(cookie)
+    if (CSRF_COOKIE_NAME in cookies) {
+      const csrf_token = cookies.csrf_token
+      return csrf_token
+    }
+  }
+
+  if (!process.browser) {
+    const newCookie = serialize(
+      CSRF_COOKIE_NAME,
+      crypto.randomBytes(32).toString('base64'),
+      COOKIE_OPTIONS_CSRF
+    )
+    res?.setHeader('Set-Cookie', newCookie)
+  }
+
+  return undefined
 }

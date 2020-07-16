@@ -6,6 +6,7 @@ import { WebSocketLink } from 'apollo-link-ws'
 import { getMainDefinition } from 'apollo-utilities'
 import { split } from 'apollo-link'
 import { GRAPHQL_PATH } from './constants'
+import { initCSRF, CSRF_HEADER_NAME } from './authConfig'
 
 export type ResolverContext = {
   req?: IncomingMessage
@@ -23,18 +24,23 @@ const GRAPHQL_ENDPOINT_WS = process.browser
 
 let apolloClient: ApolloClient<NormalizedCacheObject> | undefined
 
-const createSchemaLink = (context?: ResolverContext) => {
-  const { SchemaLink } = require('apollo-link-schema')
-  const { schema } = require('./schema')
-  return new SchemaLink({ schema, context })
-}
+function createIsomorphLink(context: ResolverContext = {}) {
+  const csrfToken = initCSRF(context.req, context.res)
 
-const createHttpLink = () => {
-  const { HttpLink } = require('apollo-link-http')
-  return new HttpLink({
-    uri: GRAPHQL_ENDPOINT,
-    credentials: 'include',
-  })
+  if (process.browser) {
+    const { HttpLink } = require('apollo-link-http')
+    return new HttpLink({
+      uri: GRAPHQL_ENDPOINT,
+      credentials: 'include',
+      headers: {
+        [CSRF_HEADER_NAME]: csrfToken,
+      },
+    })
+  } else {
+    const { SchemaLink } = require('apollo-link-schema')
+    const { schema } = require('./schema')
+    return new SchemaLink({ schema, context })
+  }
 }
 
 const createWsLink = () =>
@@ -56,9 +62,9 @@ const createLink = (context?: ResolverContext) =>
           )
         },
         createWsLink(),
-        createHttpLink()
+        createIsomorphLink()
       )
-    : createSchemaLink(context)
+    : createIsomorphLink(context)
 
 const createApolloClient = (context?: ResolverContext) =>
   new ApolloClient({
