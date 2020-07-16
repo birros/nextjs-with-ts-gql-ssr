@@ -52,7 +52,7 @@ export const useAuth: UseAuth = ({
         throw new Error('error.no_response_object')
       }
 
-      csrf(req)
+      await csrf(req)
       const userServerSide = await login(loginInput)
       const userClientSide = await serialize(userServerSide)
       const payload = await stringify(userClientSide)
@@ -64,7 +64,7 @@ export const useAuth: UseAuth = ({
       }
 
       if (checkCSRF) {
-        csrf(req)
+        await csrf(req)
       }
 
       const payload = await read(req)
@@ -73,7 +73,7 @@ export const useAuth: UseAuth = ({
       }
 
       const userClientSide = await parse(payload)
-      const userServerSide = deserialize(userClientSide)
+      const userServerSide = await deserialize(userClientSide)
       return userServerSide
     },
     logout: async (req, res) => {
@@ -84,8 +84,8 @@ export const useAuth: UseAuth = ({
         throw new Error('error.no_response_object')
       }
 
-      csrf(req)
-      clear(res)
+      await csrf(req)
+      await clear(res)
     },
   }
 }

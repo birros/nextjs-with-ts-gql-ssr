@@ -123,8 +123,12 @@ export const authConfig: AuthConfig<
         ? parse(req.headers.cookie).csrf_token
         : undefined
 
-    if (xCsrfToken !== csrfToken) {
-      throw new Error('error.csrf')
+    if (!csrfToken || !xCsrfToken || xCsrfToken !== csrfToken) {
+      if (process.env.NODE_ENV !== 'development') {
+        throw new Error('error.csrf')
+      } else {
+        console.warn('error.csrf')
+      }
     }
   },
 }

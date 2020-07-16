@@ -13,10 +13,10 @@ interface SubscriptionServerOptions {
 }
 
 const apolloServer = new ApolloServer({
-  playground: {
+  playground: process.env.NODE_ENV === 'development' && {
     subscriptionEndpoint: GRAPHQL_PATH,
     settings: {
-      'request.credentials': 'include',
+      'request.credentials': 'same-origin',
     },
   },
   schema,

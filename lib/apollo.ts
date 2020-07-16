@@ -31,7 +31,7 @@ function createIsomorphLink(context: ResolverContext = {}) {
     const { HttpLink } = require('apollo-link-http')
     return new HttpLink({
       uri: GRAPHQL_ENDPOINT,
-      credentials: 'include',
+      credentials: 'same-origin',
       headers: {
         [CSRF_HEADER_NAME]: csrfToken,
       },
