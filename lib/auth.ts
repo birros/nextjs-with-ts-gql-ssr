@@ -6,7 +6,7 @@ export interface AuthConfig<LoginInput, UserServerSide, UserClientSide> {
   stringify: (userClientSide: UserClientSide) => Promise<string>
   write: (res: ServerResponse, payload: string) => Promise<void>
   read: (req: IncomingMessage) => Promise<string | undefined>
-  parse: (payload: string) => Promise<UserClientSide>
+  parse: (payload: string) => Promise<UserClientSide | undefined>
   deserialize: (userClientSide: UserClientSide) => Promise<UserServerSide>
   clear: (res: ServerResponse) => Promise<void>
 }
@@ -63,6 +63,10 @@ export const useAuth: UseAuth = ({
       }
 
       const userClientSide = await parse(payload)
+      if (userClientSide === undefined) {
+        return undefined
+      }
+
       const userServerSide = await deserialize(userClientSide)
       return userServerSide
     },

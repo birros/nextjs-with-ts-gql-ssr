@@ -77,10 +77,13 @@ export const authConfig: AuthConfig<
     return payload
   },
   parse: async (payload) => {
-    const userClientSide = verify(payload, JWT_SECRET, {
-      maxAge: `${MAX_AGE}s`,
-    }) as UserClientSide
-    return userClientSide
+    try {
+      const userClientSide = verify(payload, JWT_SECRET, {
+        maxAge: `${MAX_AGE}s`,
+      }) as UserClientSide
+      return userClientSide
+    } catch (e) {}
+    return undefined
   },
   deserialize: async (userClientSide) => {
     return {

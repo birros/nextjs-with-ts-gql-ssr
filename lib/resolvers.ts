@@ -41,6 +41,13 @@ const Mutation: Required<MutationResolvers<ResolverContext>> = {
 
 const Subscription: Required<SubscriptionResolvers<ResolverContext>> = {
   counter: {
+    resolve: async (payload, _args, context, _info) => {
+      const user = await authenticate(context.req, context.res)
+      if (!user) {
+        throw new Error('error.unauthorized')
+      }
+      return payload
+    },
     subscribe: async (_parent, _args, { req, res }, _info) => {
       const user = await authenticate(req, res)
       if (!user) {
@@ -50,10 +57,7 @@ const Subscription: Required<SubscriptionResolvers<ResolverContext>> = {
       const channel = Math.random().toString(36).substring(2, 15) // random channel name
 
       let count = 10
-      setInterval(
-        () => pubsub.publish(channel, { counter: { count: count++ } }),
-        1000
-      )
+      setInterval(() => pubsub.publish(channel, { count: count++ }), 1000)
 
       return pubsub.asyncIterator(channel)
     },
