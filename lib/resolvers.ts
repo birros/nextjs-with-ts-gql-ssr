@@ -2,7 +2,9 @@ import {
   QueryResolvers,
   MutationResolvers,
   SubscriptionResolvers,
+  Counter,
 } from '../graphql/typeDefs.graphqls'
+import { GraphQLResolveInfo } from 'graphql'
 import { ResolverContext } from './apollo'
 import { PubSub } from 'graphql-subscriptions'
 import { useAuth } from './auth'
@@ -41,13 +43,6 @@ const Mutation: Required<MutationResolvers<ResolverContext>> = {
 
 const Subscription: Required<SubscriptionResolvers<ResolverContext>> = {
   counter: {
-    resolve: async (payload, _args, context, _info) => {
-      const user = await authenticate(context.req, context.res)
-      if (!user) {
-        throw new Error('error.unauthorized')
-      }
-      return payload
-    },
     subscribe: async (_parent, _args, { req, res }, _info) => {
       const user = await authenticate(req, res)
       if (!user) {
@@ -57,9 +52,28 @@ const Subscription: Required<SubscriptionResolvers<ResolverContext>> = {
       const channel = Math.random().toString(36).substring(2, 15) // random channel name
 
       let count = 10
-      setInterval(() => pubsub.publish(channel, { count: count++ }), 1000)
+      setInterval(() => {
+        const payload: Counter = {
+          count: count++,
+        }
 
-      return pubsub.asyncIterator(channel)
+        pubsub.publish(channel, payload)
+      }, 1000)
+
+      return pubsub.asyncIterator<Counter>(channel)
+    },
+    resolve: async (
+      payload: Counter,
+      _args: {},
+      { req, res }: ResolverContext,
+      _info: GraphQLResolveInfo
+    ) => {
+      const user = await authenticate(req, res)
+      if (!user) {
+        throw new Error('error.unauthorized')
+      }
+
+      return payload
     },
   },
 }
