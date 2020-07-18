@@ -2,13 +2,16 @@ import { AuthConfig } from './auth'
 import { serialize, parse, CookieSerializeOptions } from 'cookie'
 import { sign, verify } from 'jsonwebtoken'
 import { COOKIE_OPTIONS, MAX_AGE, JWT_SECRET, COOKIE_NAME } from './constants'
-import ApolloClient from 'apollo-client'
 import {
   RefreshDocument,
   RefreshMutation,
 } from '../graphql/RefreshMutation.graphql'
 import { RefreshCallback } from './autoRefresh'
 import { LogoutCallback } from './autoLogout'
+import {
+  LogoutDocument,
+  LogoutMutation,
+} from '../graphql/LogoutMutation.graphql'
 
 const COOKIE_OPTIONS_JWT: CookieSerializeOptions = {
   ...COOKIE_OPTIONS,
@@ -106,9 +109,7 @@ export const authConfig: AuthConfig<
   },
 }
 
-export const refreshCallback: RefreshCallback = async (
-  client: ApolloClient<any>
-) => {
+export const refreshCallback: RefreshCallback = async (client) => {
   const { data, errors } = await client.mutate<RefreshMutation>({
     mutation: RefreshDocument,
   })
@@ -116,6 +117,11 @@ export const refreshCallback: RefreshCallback = async (
   return connected
 }
 
-export const logoutCallback: LogoutCallback = () => {
+export const logoutCallback: LogoutCallback = async (client) => {
+  if (client) {
+    await client.mutate<LogoutMutation>({
+      mutation: LogoutDocument,
+    })
+  }
   document.location.reload()
 }
