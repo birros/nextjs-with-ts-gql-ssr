@@ -3,7 +3,10 @@ import { serialize, parse, CookieSerializeOptions } from 'cookie'
 import { sign, verify } from 'jsonwebtoken'
 import { COOKIE_OPTIONS, MAX_AGE, JWT_SECRET, COOKIE_NAME } from './constants'
 import ApolloClient from 'apollo-client'
-import { RefreshDocument } from '../graphql/RefreshMutation.graphql'
+import {
+  RefreshDocument,
+  RefreshMutation,
+} from '../graphql/RefreshMutation.graphql'
 import { RefreshCallback } from './autoRefresh'
 import { LogoutCallback } from './autoLogout'
 
@@ -106,10 +109,10 @@ export const authConfig: AuthConfig<
 export const refreshCallback: RefreshCallback = async (
   client: ApolloClient<any>
 ) => {
-  const { data, errors } = await client.mutate({
+  const { data, errors } = await client.mutate<RefreshMutation>({
     mutation: RefreshDocument,
   })
-  const connected: boolean = !errors && data ? data.refresh : false
+  const connected = !errors && data ? data.refresh : false
   return connected
 }
 
