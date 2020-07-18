@@ -1,12 +1,21 @@
 import { IncomingMessage, ServerResponse } from 'http'
 
+export interface EncryptedObject {
+  iv: string
+  data: string
+}
+
 export interface AuthConfig<LoginInput, UserServerSide, UserClientSide> {
   login: (loginInput: LoginInput) => Promise<UserServerSide>
   serialize: (userServerSide: UserServerSide) => Promise<UserClientSide>
-  stringify: (userClientSide: UserClientSide) => Promise<string>
+  encrypt: (userClientSide: UserClientSide) => Promise<EncryptedObject>
+  tokenize: (encryptedObject: EncryptedObject) => Promise<string>
   write: (res: ServerResponse, payload: string) => Promise<void>
   read: (req: IncomingMessage) => Promise<string | undefined>
-  parse: (payload: string) => Promise<UserClientSide | undefined>
+  detokenize: (payload: string) => Promise<EncryptedObject | undefined>
+  decrypt: (
+    encryptedObject: EncryptedObject
+  ) => Promise<UserClientSide | undefined>
   deserialize: (userClientSide: UserClientSide) => Promise<UserServerSide>
   clear: (res: ServerResponse) => Promise<void>
 }
@@ -38,10 +47,12 @@ type UseAuth = <LoginInput, UserServerSide, UserClientSide>(
 export const useAuth: UseAuth = ({
   login,
   serialize,
-  stringify,
+  tokenize,
+  encrypt,
   write,
   read,
-  parse,
+  detokenize,
+  decrypt,
   deserialize,
   clear,
 }) => {
@@ -58,7 +69,12 @@ export const useAuth: UseAuth = ({
       return undefined
     }
 
-    const userClientSide = await parse(payload)
+    const encryptedObject = await detokenize(payload)
+    if (encryptedObject === undefined) {
+      return undefined
+    }
+
+    const userClientSide = await decrypt(encryptedObject)
     if (userClientSide === undefined) {
       return undefined
     }
@@ -75,7 +91,8 @@ export const useAuth: UseAuth = ({
 
       const userServerSide = await login(loginInput)
       const userClientSide = await serialize(userServerSide)
-      const payload = await stringify(userClientSide)
+      const encryptedObject = await encrypt(userClientSide)
+      const payload = await tokenize(encryptedObject)
       await write(res, payload)
       return true
     },
@@ -94,7 +111,8 @@ export const useAuth: UseAuth = ({
 
         if (userServerSide && res) {
           const userClientSide = await serialize(userServerSide)
-          const payload = await stringify(userClientSide)
+          const encryptedObject = await encrypt(userClientSide)
+          const payload = await tokenize(encryptedObject)
           await write(res, payload)
           return true
         }

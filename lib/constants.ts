@@ -1,6 +1,6 @@
 import { CookieSerializeOptions } from 'cookie'
 
-export const GRAPHQL_PATH = '/api/graphql'
+export const GRAPHQL_PATH: string = '/api/graphql'
 
 export const COOKIE_OPTIONS: CookieSerializeOptions = {
   secure:
@@ -10,19 +10,22 @@ export const COOKIE_OPTIONS: CookieSerializeOptions = {
   path: '/',
 }
 
-export const COOKIE_NAME = 'auth.token'
+export const COOKIE_NAME: string = 'auth.token'
 
-export const JWT_SECRET = 'loremipsum'
+export const JWT_SECRET_ENCODING: BufferEncoding = 'base64'
 
-export const CSRF_HEADER_NAME = 'x-csrf-token'
+// node -e 'console.log(require("crypto").randomBytes(32).toString("base64"))'
+export const JWT_SECRET: string = 'h3QrilQMTBYVFvdFtkOSP7cyQ9TpTWd10Ca/Q5mOllI='
 
-export const CSRF_COOKIE_NAME = 'csrf.token'
+export const CSRF_HEADER_NAME: string = 'x-csrf-token'
 
-export const ERROR_UNAUTHORIZED = 'error.unauthorized'
+export const CSRF_COOKIE_NAME: string = 'csrf.token'
 
-export const MAX_AGE = 15 * 60 // 15 min (in seconds)
+export const ERROR_UNAUTHORIZED: string = 'error.unauthorized'
 
-export const AUTO_REFRESH_TIMEOUT = 1 * 60 * 1000 // 1 min (in milliseconds)
+export const MAX_AGE: number = 15 * 60 // 15 min (in seconds)
 
-export const AUTO_LOGOUT_TIMEOUT =
+export const AUTO_REFRESH_TIMEOUT: number = 1 * 60 * 1000 // 1 min (in milliseconds)
+
+export const AUTO_LOGOUT_TIMEOUT: number =
   MAX_AGE * 1000 + AUTO_REFRESH_TIMEOUT + 10 * 1000 // in milliseconds

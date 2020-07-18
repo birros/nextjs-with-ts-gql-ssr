@@ -1,7 +1,14 @@
-import { AuthConfig } from './auth'
+import crypto from 'crypto'
+import { AuthConfig, EncryptedObject } from './auth'
 import { serialize, parse, CookieSerializeOptions } from 'cookie'
 import { sign, verify } from 'jsonwebtoken'
-import { COOKIE_OPTIONS, MAX_AGE, JWT_SECRET, COOKIE_NAME } from './constants'
+import {
+  COOKIE_OPTIONS,
+  MAX_AGE,
+  JWT_SECRET,
+  COOKIE_NAME,
+  JWT_SECRET_ENCODING,
+} from './constants'
 import {
   RefreshDocument,
   RefreshMutation,
@@ -13,6 +20,10 @@ import {
   LogoutMutation,
 } from '../graphql/LogoutMutation.graphql'
 
+const ENCRYPTION_TYPE = 'aes-256-cbc'
+const ENCRYPTION_ENCODING = 'base64'
+const BUFFER_ENCRYPTION = 'utf8'
+const ENCRYPTION_KEY = Buffer.from(JWT_SECRET, JWT_SECRET_ENCODING)
 const COOKIE_OPTIONS_JWT: CookieSerializeOptions = {
   ...COOKIE_OPTIONS,
   maxAge: MAX_AGE,
@@ -60,8 +71,21 @@ export const authConfig: AuthConfig<
       id: userServerSide.id,
     }
   },
-  stringify: async (userClientSide) => {
-    const payload = sign(userClientSide, JWT_SECRET)
+  encrypt: async (userClientSide) => {
+    const payload = JSON.stringify(userClientSide)
+    const iv = crypto.randomBytes(16)
+
+    const cipher = crypto.createCipheriv(ENCRYPTION_TYPE, ENCRYPTION_KEY, iv)
+    let encrypted = cipher.update(payload, BUFFER_ENCRYPTION)
+    encrypted = Buffer.concat([encrypted, cipher.final()])
+
+    return {
+      iv: iv.toString(ENCRYPTION_ENCODING),
+      data: encrypted.toString(ENCRYPTION_ENCODING),
+    }
+  },
+  tokenize: async (encryptedObject) => {
+    const payload = sign(encryptedObject, JWT_SECRET)
     return payload
   },
   write: async (res, payload) => {
@@ -82,11 +106,31 @@ export const authConfig: AuthConfig<
     const payload = cookies[COOKIE_NAME]
     return payload
   },
-  parse: async (payload) => {
+  detokenize: async (payload) => {
     try {
-      const userClientSide = verify(payload, JWT_SECRET, {
+      const encryptedObject = verify(payload, JWT_SECRET, {
         maxAge: `${MAX_AGE}s`,
-      }) as UserClientSide
+      }) as EncryptedObject
+      return encryptedObject
+    } catch (e) {}
+    return undefined
+  },
+  decrypt: async (encryptedObject) => {
+    try {
+      const iv = Buffer.from(encryptedObject.iv, ENCRYPTION_ENCODING)
+      const encrypted = Buffer.from(encryptedObject.data, ENCRYPTION_ENCODING)
+
+      const decipher = crypto.createDecipheriv(
+        ENCRYPTION_TYPE,
+        ENCRYPTION_KEY,
+        iv
+      )
+      let decrypted = decipher.update(encrypted)
+      decrypted = Buffer.concat([decrypted, decipher.final()])
+
+      const payload = decrypted.toString()
+      const userClientSide: UserClientSide = JSON.parse(payload)
+
       return userClientSide
     } catch (e) {}
     return undefined
