@@ -14,7 +14,11 @@ import {
 } from './constants'
 import { setupCSRF, getCSRFToken } from './csrf'
 import { refreshCallback, logoutCallback } from './config'
-import { withAutoRefresh, useAutoRefresh } from './autoRefresh'
+import {
+  withAutoRefresh,
+  useAutoRefresh,
+  createAutoRefreshContext,
+} from './autoRefresh'
 import { withAutoLogout, useAutoLogout } from './autoLogout'
 
 export type ResolverContext = {
@@ -32,6 +36,8 @@ const GRAPHQL_ENDPOINT_WS = process.browser
   : ''
 
 let apolloClient: ApolloClient<NormalizedCacheObject> | undefined
+
+const autoRefreshContext = createAutoRefreshContext()
 
 const createIsomorphLink = (context: ResolverContext = {}): ApolloLink => {
   if (!process.browser) {
@@ -60,7 +66,8 @@ const createWsLink = () =>
       options: {
         reconnect: true,
       },
-    })
+    }),
+    autoRefreshContext
   )
 
 const createLink = (context?: ResolverContext) =>
@@ -97,7 +104,12 @@ export function initializeApollo(
 ) {
   const _apolloClient = apolloClient ?? createApolloClient(context)
 
-  useAutoRefresh(_apolloClient, refreshCallback, AUTO_REFRESH_TIMEOUT)
+  useAutoRefresh(
+    _apolloClient,
+    refreshCallback,
+    autoRefreshContext,
+    AUTO_REFRESH_TIMEOUT
+  )
   useAutoLogout(logoutCallback, AUTO_LOGOUT_TIMEOUT)
 
   // If your page has Next.js data fetching methods that use Apollo Client, the initial state

@@ -5,17 +5,27 @@ import { useActivityInterval } from './activityDetector'
 
 export type RefreshCallback = (client: ApolloClient<any>) => Promise<boolean>
 
-let subscriptionClient: SubscriptionClient | undefined
+interface AutoRefreshContext {
+  subscriptionClient: SubscriptionClient | undefined
+}
 
-export const withAutoRefresh = (wsLink: WebSocketLink): WebSocketLink => {
+export const createAutoRefreshContext = (): AutoRefreshContext => ({
+  subscriptionClient: undefined,
+})
+
+export const withAutoRefresh = (
+  wsLink: WebSocketLink,
+  context: AutoRefreshContext
+): WebSocketLink => {
   // @ts-ignore
-  subscriptionClient = wsLink.subscriptionClient
+  context.subscriptionClient = wsLink.subscriptionClient
   return wsLink
 }
 
 export const useAutoRefresh = (
   client: ApolloClient<any>,
   refresh: RefreshCallback,
+  context: AutoRefreshContext,
   timeout: number
 ) => {
   let connected = false
@@ -28,8 +38,8 @@ export const useAutoRefresh = (
 
     connected = await refresh(client)
 
-    if (connected && atLeastRefreshedOnce && subscriptionClient) {
-      subscriptionClient.close(false, false)
+    if (connected && atLeastRefreshedOnce && context.subscriptionClient) {
+      context.subscriptionClient.close(false, false)
       setTimeout(async () => {
         // Refresh all queries to retrieve data that could have been created
         // during the time interval when the websocket is closed during
