@@ -81,12 +81,12 @@ export const useAutoRefresh = (
 
     connected = await refresh(client)
 
-    if (connected && atLeastRefreshedOnce) {
-      subscriptionClient?.close(false, false)
+    if (connected && atLeastRefreshedOnce && subscriptionClient) {
+      subscriptionClient.close(false, false)
       setTimeout(async () => {
         // Refresh all queries to retrieve data that could have been created
-        // during the time interval when the weboscket is closed during
-        // withAutoRefresh.
+        // during the time interval when the websocket is closed during
+        // subscriptionClient.close.
         await client.reFetchObservableQueries()
       }, 5 * 1000)
     }
