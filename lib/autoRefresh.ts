@@ -63,13 +63,24 @@ export const useAutoRefresh = (
   timeout: number
 ) => {
   let connected = false
+  let atLeastRefreshedOnce = false
+
   const cb = async () => {
     if (!process.browser) {
       return
     }
 
     connected = await refresh(client)
+
+    if (connected && atLeastRefreshedOnce) {
+      // Refresh all queries to retrieve data that could have been created
+      // during the time interval when the weboscket is closed during
+      // withAutoRefresh.
+      await client.reFetchObservableQueries()
+    }
+    atLeastRefreshedOnce = true
   }
+
   cb()
   useActivityInterval(() => connected && cb(), timeout)
 }
