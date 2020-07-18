@@ -1,14 +1,4 @@
-import crypto from 'crypto'
-import { AuthConfig, EncryptedObject } from './auth'
-import { serialize, parse, CookieSerializeOptions } from 'cookie'
-import { sign, verify } from 'jsonwebtoken'
-import {
-  COOKIE_OPTIONS,
-  MAX_AGE,
-  JWT_SECRET,
-  COOKIE_NAME,
-  JWT_SECRET_ENCODING,
-} from './constants'
+import { AuthConfig } from './auth'
 import {
   RefreshDocument,
   RefreshMutation,
@@ -19,16 +9,14 @@ import {
   LogoutDocument,
   LogoutMutation,
 } from '../graphql/LogoutMutation.graphql'
+import {
+  COOKIE_OPTIONS,
+  MAX_AGE,
+  JWT_SECRET,
+  COOKIE_NAME,
+  JWT_SECRET_ENCODING,
+} from './constants'
 
-const ENCRYPTION_TYPE = 'aes-256-cbc'
-const ENCRYPTION_ENCODING = 'base64'
-const BUFFER_ENCRYPTION = 'utf8'
-const ENCRYPTION_KEY = Buffer.from(JWT_SECRET, JWT_SECRET_ENCODING)
-const COOKIE_OPTIONS_JWT: CookieSerializeOptions = {
-  ...COOKIE_OPTIONS,
-  maxAge: MAX_AGE,
-  httpOnly: true,
-}
 const USER_EXAMPLE: UserServerSide = {
   id: '42',
   username: 'foo',
@@ -56,100 +44,36 @@ export const authConfig: AuthConfig<
   UserServerSide,
   UserClientSide
 > = {
-  login: async (loginInput) => {
-    if (
-      loginInput.username !== USER_EXAMPLE.username ||
-      loginInput.password !== USER_EXAMPLE_PASSWORD
-    ) {
-      throw new Error('error.credentials')
-    }
-
-    return USER_EXAMPLE
+  env: {
+    COOKIE_OPTIONS,
+    MAX_AGE,
+    JWT_SECRET,
+    COOKIE_NAME,
+    JWT_SECRET_ENCODING,
   },
-  serialize: async (userServerSide) => {
-    return {
-      id: userServerSide.id,
-    }
-  },
-  encrypt: async (userClientSide) => {
-    const payload = JSON.stringify(userClientSide)
-    const iv = crypto.randomBytes(16)
+  hooks: {
+    login: async (_env, loginInput) => {
+      if (
+        loginInput.username !== USER_EXAMPLE.username ||
+        loginInput.password !== USER_EXAMPLE_PASSWORD
+      ) {
+        throw new Error('error.credentials')
+      }
 
-    const cipher = crypto.createCipheriv(ENCRYPTION_TYPE, ENCRYPTION_KEY, iv)
-    let encrypted = cipher.update(payload, BUFFER_ENCRYPTION)
-    encrypted = Buffer.concat([encrypted, cipher.final()])
-
-    return {
-      iv: iv.toString(ENCRYPTION_ENCODING),
-      data: encrypted.toString(ENCRYPTION_ENCODING),
-    }
-  },
-  tokenize: async (encryptedObject) => {
-    const payload = sign(encryptedObject, JWT_SECRET)
-    return payload
-  },
-  write: async (res, payload) => {
-    const cookie = serialize(COOKIE_NAME, payload, COOKIE_OPTIONS_JWT)
-    res.setHeader('Set-Cookie', cookie)
-  },
-  read: async (req) => {
-    if (!req.headers.cookie) {
-      return undefined
-    }
-
-    const cookies = parse(req.headers.cookie)
-
-    if (COOKIE_NAME in cookies === false) {
-      return undefined
-    }
-
-    const payload = cookies[COOKIE_NAME]
-    return payload
-  },
-  detokenize: async (payload) => {
-    try {
-      const encryptedObject = verify(payload, JWT_SECRET, {
-        maxAge: `${MAX_AGE}s`,
-      }) as EncryptedObject
-      return encryptedObject
-    } catch (e) {}
-    return undefined
-  },
-  decrypt: async (encryptedObject) => {
-    try {
-      const iv = Buffer.from(encryptedObject.iv, ENCRYPTION_ENCODING)
-      const encrypted = Buffer.from(encryptedObject.data, ENCRYPTION_ENCODING)
-
-      const decipher = crypto.createDecipheriv(
-        ENCRYPTION_TYPE,
-        ENCRYPTION_KEY,
-        iv
-      )
-      let decrypted = decipher.update(encrypted)
-      decrypted = Buffer.concat([decrypted, decipher.final()])
-
-      const payload = decrypted.toString()
-      const userClientSide: UserClientSide = JSON.parse(payload)
-
-      return userClientSide
-    } catch (e) {}
-    return undefined
-  },
-  deserialize: async (userClientSide) => {
-    return {
-      id: userClientSide.id,
-      username: USER_EXAMPLE.username,
-      roles: USER_EXAMPLE.roles,
-    }
-  },
-  clear: async (res) => {
-    const cookie = serialize(COOKIE_NAME, '', {
-      ...COOKIE_OPTIONS,
-      maxAge: undefined,
-      expires: new Date(),
-    })
-
-    res.setHeader('Set-Cookie', cookie)
+      return USER_EXAMPLE
+    },
+    serialize: async (_env, userServerSide) => {
+      return {
+        id: userServerSide.id,
+      }
+    },
+    deserialize: async (_env, userClientSide) => {
+      return {
+        id: userClientSide.id,
+        username: USER_EXAMPLE.username,
+        roles: USER_EXAMPLE.roles,
+      }
+    },
   },
 }
 
