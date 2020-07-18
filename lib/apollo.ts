@@ -7,7 +7,6 @@ import { getMainDefinition } from 'apollo-utilities'
 import { split, ApolloLink } from 'apollo-link'
 import {
   GRAPHQL_PATH,
-  WSLINK_REFRESH_TIMEOUT,
   AUTO_REFRESH_TIMEOUT,
   CSRF_HEADER_NAME,
   ERROR_UNAUTHORIZED,
@@ -60,8 +59,7 @@ const createWsLink = () =>
       options: {
         reconnect: true,
       },
-    }),
-    WSLINK_REFRESH_TIMEOUT
+    })
   )
 
 const createLink = (context?: ResolverContext) =>

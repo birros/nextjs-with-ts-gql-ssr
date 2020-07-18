@@ -1,5 +1,6 @@
 import { ApolloClient } from 'apollo-client'
 import { WebSocketLink } from 'apollo-link-ws'
+import { SubscriptionClient } from 'subscriptions-transport-ws'
 
 const useActivityDetector = ({
   onIdle,
@@ -57,6 +58,14 @@ const useActivityInterval = (interval: Function, timeout: number) => {
 
 export type RefreshCallback = (client: ApolloClient<any>) => Promise<boolean>
 
+let subscriptionClient: SubscriptionClient | undefined
+
+export const withAutoRefresh = (wsLink: WebSocketLink): WebSocketLink => {
+  // @ts-ignore
+  subscriptionClient = wsLink.subscriptionClient
+  return wsLink
+}
+
 export const useAutoRefresh = (
   client: ApolloClient<any>,
   refresh: RefreshCallback,
@@ -73,27 +82,17 @@ export const useAutoRefresh = (
     connected = await refresh(client)
 
     if (connected && atLeastRefreshedOnce) {
-      // Refresh all queries to retrieve data that could have been created
-      // during the time interval when the weboscket is closed during
-      // withAutoRefresh.
-      await client.reFetchObservableQueries()
+      subscriptionClient?.close(false, false)
+      setTimeout(async () => {
+        // Refresh all queries to retrieve data that could have been created
+        // during the time interval when the weboscket is closed during
+        // withAutoRefresh.
+        await client.reFetchObservableQueries()
+      }, 5 * 1000)
     }
     atLeastRefreshedOnce = true
   }
 
   cb()
   useActivityInterval(() => connected && cb(), timeout)
-}
-
-export const withAutoRefresh = (
-  wsLink: WebSocketLink,
-  timeout: number
-): WebSocketLink => {
-  setInterval(
-    // @ts-ignore
-    () => wsLink.subscriptionClient.close(false, false),
-    timeout
-  )
-
-  return wsLink
 }
