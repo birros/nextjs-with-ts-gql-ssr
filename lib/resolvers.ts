@@ -8,7 +8,7 @@ import { GraphQLResolveInfo } from 'graphql'
 import { ResolverContext } from './apollo'
 import { PubSub } from 'graphql-subscriptions'
 import { useAuth } from './auth'
-import { authConfig } from './authConfig'
+import { authConfig } from './config'
 import { checkCSRF } from './csrf'
 
 const { authenticate, login, logout, refresh } = useAuth(authConfig)

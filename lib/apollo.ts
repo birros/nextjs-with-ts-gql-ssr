@@ -12,7 +12,7 @@ import {
   CSRF_HEADER_NAME,
 } from './constants'
 import { setupCSRF, getCSRFToken } from './csrf'
-import { refreshCallback } from './authConfig'
+import { refreshCallback } from './config'
 import { useAutoRefresh } from './autoRefresh'
 import { withWsLinkAutoRefresh } from './wsLinkAutoRefresh'
 
