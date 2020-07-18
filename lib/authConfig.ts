@@ -1,17 +1,16 @@
 import { AuthConfig } from './auth'
 import { serialize, parse, CookieSerializeOptions } from 'cookie'
 import { sign, verify } from 'jsonwebtoken'
-import { COOKIE_OPTIONS } from './constants'
+import { COOKIE_OPTIONS, MAX_AGE, JWT_SECRET, COOKIE_NAME } from './constants'
+import ApolloClient from 'apollo-client'
+import { RefreshDocument } from '../graphql/RefreshMutation.graphql'
+import { RefreshCallback } from './autoRefresh'
 
-const MAX_AGE = 15 * 60 // 15 min (in seconds)
-const COOKIE_NAME = 'token'
 const COOKIE_OPTIONS_JWT: CookieSerializeOptions = {
   ...COOKIE_OPTIONS,
   maxAge: MAX_AGE,
   httpOnly: true,
 }
-
-const JWT_SECRET = 'loremipsum'
 const USER_EXAMPLE: UserServerSide = {
   id: '42',
   username: 'foo',
@@ -73,7 +72,7 @@ export const authConfig: AuthConfig<
       return undefined
     }
 
-    const payload = cookies['token']
+    const payload = cookies[COOKIE_NAME]
     return payload
   },
   parse: async (payload) => {
@@ -101,4 +100,14 @@ export const authConfig: AuthConfig<
 
     res.setHeader('Set-Cookie', cookie)
   },
+}
+
+export const refreshCallback: RefreshCallback = async (
+  client: ApolloClient<any>
+) => {
+  const { data, errors } = await client.mutate({
+    mutation: RefreshDocument,
+  })
+  const connected: boolean = !errors && data ? data.refresh : false
+  return connected
 }

@@ -11,7 +11,7 @@ import { useAuth } from './auth'
 import { authConfig } from './authConfig'
 import { checkCSRF } from './csrf'
 
-const { authenticate, login, logout } = useAuth(authConfig)
+const { authenticate, login, logout, refresh } = useAuth(authConfig)
 
 const pubsub = new PubSub()
 
@@ -31,13 +31,15 @@ const Query: Required<QueryResolvers<ResolverContext>> = {
 const Mutation: Required<MutationResolvers<ResolverContext>> = {
   async login(_parent, { input: { username, password } }, { req, res }, _info) {
     checkCSRF(req)
-    await login(req, res, { username, password })
-    return true
+    return await login(req, res, { username, password })
   },
   async logout(_parent, _args, { req, res }, _info) {
     checkCSRF(req)
-    await logout(req, res)
-    return true
+    return await logout(req, res)
+  },
+  async refresh(_parent, _args, { req, res }, _info) {
+    checkCSRF(req)
+    return await refresh(req, res)
   },
 }
 

@@ -5,8 +5,16 @@ import { InMemoryCache, NormalizedCacheObject } from 'apollo-cache-inmemory'
 import { WebSocketLink } from 'apollo-link-ws'
 import { getMainDefinition } from 'apollo-utilities'
 import { split } from 'apollo-link'
-import { GRAPHQL_PATH } from './constants'
-import { setupCSRF, getCSRFToken, CSRF_HEADER_NAME } from './csrf'
+import {
+  GRAPHQL_PATH,
+  WSLINK_REFRESH_TIMEOUT,
+  AUTO_REFRESH_TIMEOUT,
+  CSRF_HEADER_NAME,
+} from './constants'
+import { setupCSRF, getCSRFToken } from './csrf'
+import { refreshCallback } from './authConfig'
+import { useAutoRefresh } from './autoRefresh'
+import { withWsLinkAutoRefresh } from './wsLinkAutoRefresh'
 
 export type ResolverContext = {
   req?: IncomingMessage
@@ -45,12 +53,15 @@ const createIsomorphLink = (context: ResolverContext = {}) => {
 }
 
 const createWsLink = () =>
-  new WebSocketLink({
-    uri: GRAPHQL_ENDPOINT_WS,
-    options: {
-      reconnect: true,
-    },
-  })
+  withWsLinkAutoRefresh(
+    new WebSocketLink({
+      uri: GRAPHQL_ENDPOINT_WS,
+      options: {
+        reconnect: true,
+      },
+    }),
+    WSLINK_REFRESH_TIMEOUT
+  )
 
 const createLink = (context?: ResolverContext) =>
   process.browser
@@ -81,6 +92,8 @@ export function initializeApollo(
   context?: ResolverContext
 ) {
   const _apolloClient = apolloClient ?? createApolloClient(context)
+
+  useAutoRefresh(_apolloClient, refreshCallback, AUTO_REFRESH_TIMEOUT)
 
   // If your page has Next.js data fetching methods that use Apollo Client, the initial state
   // get hydrated here

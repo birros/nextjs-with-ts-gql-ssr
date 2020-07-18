@@ -1,15 +1,12 @@
 import { IncomingMessage, ServerResponse } from 'http'
 import crypto from 'crypto'
 import { serialize, parse, CookieSerializeOptions } from 'cookie'
-import { COOKIE_OPTIONS } from './constants'
+import { COOKIE_OPTIONS, CSRF_COOKIE_NAME, CSRF_HEADER_NAME } from './constants'
 
-const CSRF_COOKIE_NAME = 'csrf_token'
 const COOKIE_OPTIONS_CSRF: CookieSerializeOptions = {
   ...COOKIE_OPTIONS,
   httpOnly: false,
 }
-
-export const CSRF_HEADER_NAME = 'x-csrf-token'
 
 export const setupCSRF = (
   req: IncomingMessage | undefined,
@@ -32,8 +29,8 @@ export const getCSRFToken = (req: IncomingMessage | undefined) => {
   if (cookie) {
     const cookies = parse(cookie)
     if (CSRF_COOKIE_NAME in cookies) {
-      const csrf_token = cookies.csrf_token
-      return csrf_token
+      const csrfToken = cookies[CSRF_COOKIE_NAME]
+      return csrfToken
     }
   }
 
@@ -53,7 +50,7 @@ export const checkCSRF = (req: IncomingMessage | undefined) => {
 
   const csrfToken =
     req.headers.cookie && CSRF_COOKIE_NAME in parse(req.headers.cookie)
-      ? parse(req.headers.cookie).csrf_token
+      ? parse(req.headers.cookie)[CSRF_COOKIE_NAME]
       : undefined
 
   if (!csrfToken || !xCsrfToken || xCsrfToken !== csrfToken) {

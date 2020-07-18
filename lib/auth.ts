@@ -20,11 +20,15 @@ interface Returns<LoginInput, UserServerSide> {
     req: IncomingMessage | undefined,
     res: ServerResponse | undefined,
     loginInput: LoginInput
-  ) => Promise<void>
+  ) => Promise<boolean>
   logout: (
     req: IncomingMessage | undefined,
     res: ServerResponse | undefined
-  ) => Promise<void>
+  ) => Promise<boolean>
+  refresh: (
+    req: IncomingMessage | undefined,
+    res: ServerResponse | undefined
+  ) => Promise<boolean>
 }
 
 type UseAuth = <LoginInput, UserServerSide, UserClientSide>(
@@ -41,6 +45,28 @@ export const useAuth: UseAuth = ({
   deserialize,
   clear,
 }) => {
+  const authenticate = async (
+    req: IncomingMessage | undefined,
+    _res: ServerResponse | undefined
+  ) => {
+    if (!req) {
+      throw new Error('error.no_request_object')
+    }
+
+    const payload = await read(req)
+    if (payload === undefined) {
+      return undefined
+    }
+
+    const userClientSide = await parse(payload)
+    if (userClientSide === undefined) {
+      return undefined
+    }
+
+    const userServerSide = await deserialize(userClientSide)
+    return userServerSide
+  }
+
   return {
     login: async (_req, res, loginInput) => {
       if (!res) {
@@ -51,31 +77,29 @@ export const useAuth: UseAuth = ({
       const userClientSide = await serialize(userServerSide)
       const payload = await stringify(userClientSide)
       await write(res, payload)
+      return true
     },
-    authenticate: async (req, _res) => {
-      if (!req) {
-        throw new Error('error.no_request_object')
-      }
-
-      const payload = await read(req)
-      if (payload === undefined) {
-        return undefined
-      }
-
-      const userClientSide = await parse(payload)
-      if (userClientSide === undefined) {
-        return undefined
-      }
-
-      const userServerSide = await deserialize(userClientSide)
-      return userServerSide
-    },
+    authenticate,
     logout: async (_req, res) => {
       if (!res) {
         throw new Error('error.no_response_object')
       }
 
       await clear(res)
+      return true
+    },
+    refresh: async (req, res) => {
+      try {
+        const userServerSide = await authenticate(req, res)
+
+        if (userServerSide && res) {
+          const userClientSide = await serialize(userServerSide)
+          const payload = await stringify(userClientSide)
+          await write(res, payload)
+          return true
+        }
+      } catch (e) {}
+      return false
     },
   }
 }
