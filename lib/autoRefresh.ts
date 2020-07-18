@@ -1,4 +1,5 @@
 import { ApolloClient } from 'apollo-client'
+import { WebSocketLink } from 'apollo-link-ws'
 
 const useActivityDetector = ({
   onIdle,
@@ -71,4 +72,17 @@ export const useAutoRefresh = (
   }
   cb()
   useActivityInterval(() => connected && cb(), timeout)
+}
+
+export const withAutoRefresh = (
+  wsLink: WebSocketLink,
+  timeout: number
+): WebSocketLink => {
+  setInterval(
+    // @ts-ignore
+    () => wsLink.subscriptionClient.close(false, false),
+    timeout
+  )
+
+  return wsLink
 }

@@ -4,17 +4,18 @@ import { ApolloClient } from 'apollo-client'
 import { InMemoryCache, NormalizedCacheObject } from 'apollo-cache-inmemory'
 import { WebSocketLink } from 'apollo-link-ws'
 import { getMainDefinition } from 'apollo-utilities'
-import { split } from 'apollo-link'
+import { split, ApolloLink } from 'apollo-link'
 import {
   GRAPHQL_PATH,
   WSLINK_REFRESH_TIMEOUT,
   AUTO_REFRESH_TIMEOUT,
   CSRF_HEADER_NAME,
+  ERROR_UNAUTHORIZED,
 } from './constants'
 import { setupCSRF, getCSRFToken } from './csrf'
-import { refreshCallback } from './config'
-import { useAutoRefresh } from './autoRefresh'
-import { withWsLinkAutoRefresh } from './wsLinkAutoRefresh'
+import { refreshCallback, logoutCallback } from './config'
+import { withAutoRefresh, useAutoRefresh } from './autoRefresh'
+import { withAutoLogout } from './autoLogout'
 
 export type ResolverContext = {
   req?: IncomingMessage
@@ -32,7 +33,7 @@ const GRAPHQL_ENDPOINT_WS = process.browser
 
 let apolloClient: ApolloClient<NormalizedCacheObject> | undefined
 
-const createIsomorphLink = (context: ResolverContext = {}) => {
+const createIsomorphLink = (context: ResolverContext = {}): ApolloLink => {
   if (!process.browser) {
     setupCSRF(context.req, context.res)
 
@@ -53,7 +54,7 @@ const createIsomorphLink = (context: ResolverContext = {}) => {
 }
 
 const createWsLink = () =>
-  withWsLinkAutoRefresh(
+  withAutoRefresh(
     new WebSocketLink({
       uri: GRAPHQL_ENDPOINT_WS,
       options: {
@@ -64,19 +65,23 @@ const createWsLink = () =>
   )
 
 const createLink = (context?: ResolverContext) =>
-  process.browser
-    ? split(
-        ({ query }) => {
-          const definition = getMainDefinition(query)
-          return (
-            definition.kind === 'OperationDefinition' &&
-            definition?.operation === 'subscription'
-          )
-        },
-        createWsLink(),
-        createIsomorphLink()
-      )
-    : createIsomorphLink(context)
+  withAutoLogout(
+    process.browser
+      ? split(
+          ({ query }) => {
+            const definition = getMainDefinition(query)
+            return (
+              definition.kind === 'OperationDefinition' &&
+              definition?.operation === 'subscription'
+            )
+          },
+          createWsLink(),
+          createIsomorphLink()
+        )
+      : createIsomorphLink(context),
+    logoutCallback,
+    ERROR_UNAUTHORIZED
+  )
 
 const createApolloClient = (context?: ResolverContext) =>
   new ApolloClient({

@@ -18,6 +18,8 @@ export const CSRF_HEADER_NAME = 'x-csrf-token'
 
 export const CSRF_COOKIE_NAME = 'csrf.token'
 
+export const ERROR_UNAUTHORIZED = 'error.unauthorized'
+
 export const MAX_AGE = 15 * 60 // 15 min (in seconds)
 
 export const WSLINK_REFRESH_TIMEOUT = 10 * 60 * 1000 // 10 min (in milliseconds)

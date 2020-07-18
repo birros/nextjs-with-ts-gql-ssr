@@ -5,6 +5,7 @@ import { COOKIE_OPTIONS, MAX_AGE, JWT_SECRET, COOKIE_NAME } from './constants'
 import ApolloClient from 'apollo-client'
 import { RefreshDocument } from '../graphql/RefreshMutation.graphql'
 import { RefreshCallback } from './autoRefresh'
+import { LogoutCallback } from './autoLogout'
 
 const COOKIE_OPTIONS_JWT: CookieSerializeOptions = {
   ...COOKIE_OPTIONS,
@@ -110,4 +111,8 @@ export const refreshCallback: RefreshCallback = async (
   })
   const connected: boolean = !errors && data ? data.refresh : false
   return connected
+}
+
+export const logoutCallback: LogoutCallback = () => {
+  document.location.reload()
 }

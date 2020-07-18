@@ -10,6 +10,7 @@ import { PubSub } from 'graphql-subscriptions'
 import { useAuth } from './auth'
 import { authConfig } from './config'
 import { checkCSRF } from './csrf'
+import { ERROR_UNAUTHORIZED } from './constants'
 
 const { authenticate, login, logout, refresh } = useAuth(authConfig)
 
@@ -19,12 +20,19 @@ const Query: Required<QueryResolvers<ResolverContext>> = {
   async counter(_parent, _args, { req, res }, _info) {
     const user = await authenticate(req, res)
     if (!user) {
-      throw new Error('error.unauthorized')
+      throw new Error(ERROR_UNAUTHORIZED)
     }
 
     return {
       count: 10,
     }
+  },
+  async connected(_parent, _args, { req, res }, _info) {
+    const user = await authenticate(req, res)
+    if (!user) {
+      return false
+    }
+    return true
   },
 }
 
@@ -48,7 +56,7 @@ const Subscription: Required<SubscriptionResolvers<ResolverContext>> = {
     subscribe: async (_parent, _args, { req, res }, _info) => {
       const user = await authenticate(req, res)
       if (!user) {
-        throw new Error('error.unauthorized')
+        throw new Error(ERROR_UNAUTHORIZED)
       }
 
       const channel = Math.random().toString(36).substring(2, 15) // random channel name
@@ -72,7 +80,7 @@ const Subscription: Required<SubscriptionResolvers<ResolverContext>> = {
     ) => {
       const user = await authenticate(req, res)
       if (!user) {
-        throw new Error('error.unauthorized')
+        throw new Error(ERROR_UNAUTHORIZED)
       }
 
       return payload
