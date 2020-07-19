@@ -10,7 +10,8 @@ import {
   CSRF_HEADER_NAME,
   ERROR_UNAUTHORIZED,
   AUTO_REFRESH_TIMEOUT,
-  AUTO_LOGOUT_TIMEOUT,
+  AUTO_LOGOUT_IDLE_TIMEOUT,
+  AUTO_LOGOUT_INTERVAL_TIMEOUT,
 } from './constants'
 import { setupCSRF, getCSRFToken } from './csrf'
 import { refreshCallback, logoutCallback } from './config'
@@ -20,6 +21,7 @@ import {
   createAutoRefreshContext,
 } from './autoRefresh'
 import { withAutoLogout, useAutoLogout } from './autoLogout'
+import { isConnected } from './connected'
 
 export type ResolverContext = {
   req?: IncomingMessage
@@ -110,7 +112,13 @@ export function initializeApollo(
     autoRefreshContext,
     AUTO_REFRESH_TIMEOUT
   )
-  useAutoLogout(logoutCallback, AUTO_LOGOUT_TIMEOUT)
+  useAutoLogout(
+    _apolloClient,
+    isConnected,
+    logoutCallback,
+    AUTO_LOGOUT_IDLE_TIMEOUT,
+    AUTO_LOGOUT_INTERVAL_TIMEOUT
+  )
 
   // If your page has Next.js data fetching methods that use Apollo Client, the initial state
   // get hydrated here

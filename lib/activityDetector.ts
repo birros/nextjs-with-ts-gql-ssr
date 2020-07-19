@@ -53,3 +53,22 @@ export const useActivityInterval = (interval: Function, timeout: number) => {
     timeout,
   })
 }
+
+export const useIdleInterval = (
+  interval: Function,
+  idleTimeout: number,
+  intervalTimeout: number
+) => {
+  let timer: NodeJS.Timeout | undefined = undefined
+
+  useActivityDetector({
+    onActivity: () => timer && clearInterval(timer),
+    onIdle: () => {
+      timer && clearInterval(timer)
+
+      interval()
+      timer = setInterval(() => interval(), intervalTimeout)
+    },
+    timeout: idleTimeout,
+  })
+}

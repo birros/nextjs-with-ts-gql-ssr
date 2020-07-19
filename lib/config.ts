@@ -6,10 +6,6 @@ import {
 import { RefreshCallback } from './autoRefresh'
 import { LogoutCallback } from './autoLogout'
 import {
-  LogoutDocument,
-  LogoutMutation,
-} from '../graphql/LogoutMutation.graphql'
-import {
   COOKIE_OPTIONS,
   MAX_AGE,
   JWT_SECRET,
@@ -85,11 +81,6 @@ export const refreshCallback: RefreshCallback = async (client) => {
   return connected
 }
 
-export const logoutCallback: LogoutCallback = async (client) => {
-  if (client) {
-    await client.mutate<LogoutMutation>({
-      mutation: LogoutDocument,
-    })
-  }
+export const logoutCallback: LogoutCallback = async () => {
   document.location.reload()
 }

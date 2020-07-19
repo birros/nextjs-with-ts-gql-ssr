@@ -1,9 +1,11 @@
 import { ApolloLink } from 'apollo-link'
 import { onError } from 'apollo-link-error'
-import { useActivityDetector } from './activityDetector'
+import { useIdleInterval } from './activityDetector'
 import ApolloClient from 'apollo-client'
 
-export type LogoutCallback = (client?: ApolloClient<any>) => Promise<void>
+export type LogoutCallback = () => Promise<void>
+
+export type IsConnected = (client: ApolloClient<any>) => Promise<boolean>
 
 const wait = async (seconds: number) =>
   await new Promise((res) => setTimeout(res, seconds * 1000))
@@ -36,13 +38,22 @@ export const withAutoLogout = (
   return link
 }
 
-export const useAutoLogout = (
+export const useAutoLogout = async (
+  client: ApolloClient<any>,
+  isConnected: IsConnected,
   logoutCallback: LogoutCallback,
-  timeout: number
+  idleTimeout: number,
+  intervalTimeout: number
 ) => {
-  useActivityDetector({
-    onActivity: () => {},
-    onIdle: () => logout(logoutCallback),
-    timeout,
-  })
+  let connected = await isConnected(client)
+
+  const cb = async () => {
+    let connected = await isConnected(client)
+
+    if (!connected) {
+      logout(logoutCallback)
+    }
+  }
+
+  useIdleInterval(() => connected && cb(), idleTimeout, intervalTimeout)
 }
