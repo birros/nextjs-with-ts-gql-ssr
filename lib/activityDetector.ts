@@ -33,24 +33,22 @@ export const useActivityDetector = ({
   document.addEventListener('keypress', refreshTimer)
 }
 
-export const useActivityInterval = (interval: Function, timeout: number) => {
+export const useActivityInterval = (
+  interval: Function,
+  idleTimeout: number,
+  intervalTimeout: number
+) => {
   let timer: NodeJS.Timeout | undefined = undefined
 
   useActivityDetector({
-    onIdle: () => {
-      if (timer) {
-        clearInterval(timer)
-      }
-    },
+    onIdle: () => timer && clearInterval(timer),
     onActivity: () => {
-      interval()
+      timer && clearInterval(timer)
 
-      if (timer) {
-        clearInterval(timer)
-      }
-      timer = setInterval(() => interval(), timeout)
+      interval()
+      timer = setInterval(() => interval(), intervalTimeout)
     },
-    timeout,
+    timeout: idleTimeout,
   })
 }
 

@@ -25,7 +25,10 @@ export const ERROR_UNAUTHORIZED: string = 'error.unauthorized'
 
 export const MAX_AGE: number = 15 * 60 // 15 min (in seconds)
 
-export const AUTO_REFRESH_TIMEOUT: number = 1 * 60 * 1000 // 1 min (in milliseconds)
+export const AUTO_REFRESH_IDLE_TIMEOUT: number = 1 * 60 * 1000 // 1 min (in milliseconds)
+
+export const AUTO_REFRESH_INTERVAL_TIMEOUT: number =
+  Math.ceil((2 * MAX_AGE) / 3) * 1000 // in milliseconds
 
 export const AUTO_LOGOUT_IDLE_TIMEOUT: number = MAX_AGE * 1000 // in milliseconds
 

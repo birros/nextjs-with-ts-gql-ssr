@@ -2,13 +2,11 @@ import { ApolloLink } from 'apollo-link'
 import { onError } from 'apollo-link-error'
 import { useIdleInterval } from './activityDetector'
 import ApolloClient from 'apollo-client'
+import { wait } from './wait'
 
 export type LogoutCallback = () => Promise<void>
 
 export type IsConnected = (client: ApolloClient<any>) => Promise<boolean>
-
-const wait = async (seconds: number) =>
-  await new Promise((res) => setTimeout(res, seconds * 1000))
 
 const logout = async (logoutCallback: LogoutCallback) => {
   // Waiting a few seconds allows the network to initialize after the end of
@@ -45,10 +43,14 @@ export const useAutoLogout = async (
   idleTimeout: number,
   intervalTimeout: number
 ) => {
+  if (!process.browser) {
+    return
+  }
+
   let connected = await isConnected(client)
 
   const cb = async () => {
-    let connected = await isConnected(client)
+    connected = await isConnected(client)
 
     if (!connected) {
       logout(logoutCallback)

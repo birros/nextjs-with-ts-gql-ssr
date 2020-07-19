@@ -9,9 +9,10 @@ import {
   GRAPHQL_PATH,
   CSRF_HEADER_NAME,
   ERROR_UNAUTHORIZED,
-  AUTO_REFRESH_TIMEOUT,
   AUTO_LOGOUT_IDLE_TIMEOUT,
   AUTO_LOGOUT_INTERVAL_TIMEOUT,
+  AUTO_REFRESH_IDLE_TIMEOUT,
+  AUTO_REFRESH_INTERVAL_TIMEOUT,
 } from './constants'
 import { setupCSRF, getCSRFToken } from './csrf'
 import { refreshCallback, logoutCallback } from './config'
@@ -110,7 +111,8 @@ export function initializeApollo(
     _apolloClient,
     refreshCallback,
     autoRefreshContext,
-    AUTO_REFRESH_TIMEOUT
+    AUTO_REFRESH_IDLE_TIMEOUT,
+    AUTO_REFRESH_INTERVAL_TIMEOUT
   )
   useAutoLogout(
     _apolloClient,
