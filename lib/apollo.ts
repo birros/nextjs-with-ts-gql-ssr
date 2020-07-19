@@ -21,7 +21,7 @@ import {
   createAutoRefreshContext,
 } from './autoRefresh'
 import { withAutoLogout, useAutoLogout } from './autoLogout'
-import { isConnected } from './connected'
+import { isConnectedNoCache } from './connected'
 
 export type ResolverContext = {
   req?: IncomingMessage
@@ -115,7 +115,7 @@ export function initializeApollo(
   )
   useAutoLogout(
     _apolloClient,
-    isConnected,
+    isConnectedNoCache,
     logoutCallback,
     AUTO_LOGOUT_IDLE_TIMEOUT,
     AUTO_LOGOUT_INTERVAL_TIMEOUT
