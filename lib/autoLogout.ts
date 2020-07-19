@@ -1,12 +1,17 @@
 import { ApolloLink } from 'apollo-link'
 import { onError } from 'apollo-link-error'
-import { useIdleInterval } from './activityDetector'
 import ApolloClient from 'apollo-client'
+import { GraphQLError } from 'graphql'
+import { useIdleInterval } from './activityDetector'
 import { wait } from './wait'
 
 export type LogoutCallback = () => Promise<void>
 
 export type IsConnected = (client: ApolloClient<any>) => Promise<boolean>
+
+export type IsUnauthorized = (
+  graphQLErrors: readonly GraphQLError[]
+) => Promise<boolean>
 
 const logout = async (logoutCallback: LogoutCallback) => {
   // Waiting a few seconds allows the network to initialize after the end of
@@ -18,16 +23,17 @@ const logout = async (logoutCallback: LogoutCallback) => {
 
 export const withAutoLogout = (
   link: ApolloLink,
-  logoutCallback: LogoutCallback,
-  unauthorizedMessage: string
+  isUnauthorized: IsUnauthorized,
+  logoutCallback: LogoutCallback
 ): ApolloLink => {
   const errorLink = onError(({ graphQLErrors }) => {
-    if (graphQLErrors)
-      graphQLErrors.forEach(({ message }) => {
-        if (message === unauthorizedMessage) {
+    if (graphQLErrors) {
+      isUnauthorized(graphQLErrors).then((unauthorized) => {
+        if (unauthorized) {
           logout(logoutCallback)
         }
       })
+    }
   })
 
   if (process.browser) {

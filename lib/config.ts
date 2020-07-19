@@ -4,13 +4,14 @@ import {
   RefreshMutation,
 } from '../graphql/RefreshMutation.graphql'
 import { RefreshCallback } from './autoRefresh'
-import { LogoutCallback } from './autoLogout'
+import { LogoutCallback, IsUnauthorized } from './autoLogout'
 import {
   COOKIE_OPTIONS,
   MAX_AGE,
   JWT_SECRET,
   COOKIE_NAME,
   JWT_SECRET_ENCODING,
+  ERROR_UNAUTHORIZED,
 } from './constants'
 
 const USER_EXAMPLE: UserServerSide = {
@@ -79,6 +80,15 @@ export const refreshCallback: RefreshCallback = async (client) => {
   })
   const connected = !errors && data ? data.refresh : false
   return connected
+}
+
+export const isUnauthorized: IsUnauthorized = async (graphQLErrors) => {
+  for (const { message } of graphQLErrors) {
+    if (message === ERROR_UNAUTHORIZED) {
+      return true
+    }
+  }
+  return false
 }
 
 export const logoutCallback: LogoutCallback = async () => {

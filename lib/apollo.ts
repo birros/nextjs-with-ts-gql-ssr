@@ -8,14 +8,13 @@ import { split, ApolloLink } from 'apollo-link'
 import {
   GRAPHQL_PATH,
   CSRF_HEADER_NAME,
-  ERROR_UNAUTHORIZED,
   AUTO_LOGOUT_IDLE_TIMEOUT,
   AUTO_LOGOUT_INTERVAL_TIMEOUT,
   AUTO_REFRESH_IDLE_TIMEOUT,
   AUTO_REFRESH_INTERVAL_TIMEOUT,
 } from './constants'
 import { setupCSRF, getCSRFToken } from './csrf'
-import { refreshCallback, logoutCallback } from './config'
+import { refreshCallback, logoutCallback, isUnauthorized } from './config'
 import {
   withAutoRefresh,
   useAutoRefresh,
@@ -88,8 +87,8 @@ const createLink = (context?: ResolverContext) =>
           createIsomorphLink()
         )
       : createIsomorphLink(context),
-    logoutCallback,
-    ERROR_UNAUTHORIZED
+    isUnauthorized,
+    logoutCallback
   )
 
 const createApolloClient = (context?: ResolverContext) =>
