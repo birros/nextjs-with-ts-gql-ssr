@@ -30,7 +30,8 @@ export const useActivityDetector = ({
 
   refreshTimer()
   document.addEventListener('mousemove', refreshTimer)
-  document.addEventListener('keypress', refreshTimer)
+  document.addEventListener('touchmove', refreshTimer)
+  document.addEventListener('keydown', refreshTimer)
 }
 
 export const useActivityInterval = (
