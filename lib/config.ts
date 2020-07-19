@@ -86,8 +86,6 @@ export const refreshCallback: RefreshCallback = async (client) => {
 }
 
 export const logoutCallback: LogoutCallback = async (client) => {
-  await new Promise((res) => setTimeout(res, 3 * 1000))
-
   if (client) {
     await client.mutate<LogoutMutation>({
       mutation: LogoutDocument,

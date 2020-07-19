@@ -5,6 +5,17 @@ import ApolloClient from 'apollo-client'
 
 export type LogoutCallback = (client?: ApolloClient<any>) => Promise<void>
 
+const wait = async (seconds: number) =>
+  await new Promise((res) => setTimeout(res, seconds * 1000))
+
+const logout = async (logoutCallback: LogoutCallback) => {
+  // Waiting a few seconds allows the network to initialize after the end of
+  // standby mode
+  await wait(3)
+
+  logoutCallback()
+}
+
 export const withAutoLogout = (
   link: ApolloLink,
   logoutCallback: LogoutCallback,
@@ -14,7 +25,7 @@ export const withAutoLogout = (
     if (graphQLErrors)
       graphQLErrors.forEach(({ message }) => {
         if (message === unauthorizedMessage) {
-          logoutCallback()
+          logout(logoutCallback)
         }
       })
   })
@@ -25,10 +36,13 @@ export const withAutoLogout = (
   return link
 }
 
-export const useAutoLogout = (logout: LogoutCallback, timeout: number) => {
+export const useAutoLogout = (
+  logoutCallback: LogoutCallback,
+  timeout: number
+) => {
   useActivityDetector({
     onActivity: () => {},
-    onIdle: logout,
+    onIdle: () => logout(logoutCallback),
     timeout,
   })
 }
